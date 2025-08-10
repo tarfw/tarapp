@@ -79,9 +79,31 @@ export default function RootLayout() {
             <Stack.Screen
               name="index"
               options={{
-                headerShown: true,
-                headerLargeTitle: true,
-                headerTitle: 'Notes',
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="workspace"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="modules-list"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="notes"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="items"
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

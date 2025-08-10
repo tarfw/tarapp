@@ -68,8 +68,7 @@ export function SwipeableNote({ note, onPress, onDelete }: Props) {
         overshootRight={false}
         enableContextMenu
         containerStyle={{
-          paddingBottom: 12,
-          paddingHorizontal: 16,
+          backgroundColor: '#FFFFFF',
         }}
       >
         <Pressable
@@ -103,10 +102,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    padding: 16,
-    borderRadius: 16,
-    boxShadow: '0 0 10px 0 rgba(0, 0, 0, 0.1)',
-    backgroundColor: 'white',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   rightAction: {
     width: 60,
@@ -115,24 +115,25 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
   },
   noteTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '600',
     color: '#000',
     marginBottom: 4,
   },
   noteDate: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#8E8E93',
     marginBottom: 6,
   },
   notePreview: {
     fontSize: 15,
-    color: '#3C3C43',
-    opacity: 0.6,
+    color: '#666666',
+    lineHeight: 20,
   },
 });

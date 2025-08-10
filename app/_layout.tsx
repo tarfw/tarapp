@@ -18,60 +18,53 @@ export default function RootLayout() {
         },
       }}
       onInit={async (db: SQLiteDatabase) => {
+        console.log('Database initialization started...');
+        
         try {
-          // Always sync libSQL first to prevent conflicts between local and remote databases
-          db.syncLibSQL();
-        } catch (e) {
-          console.log('Error onInit syncing libSQL:', e);
-        }
-
-        // Define the target database version.
-        const DATABASE_VERSION = 1;
-
-        // PRAGMA is a special command in SQLite used to query or modify database settings. For example, PRAGMA user_version retrieves or sets a custom schema version number, helping you track migrations.
-        // Retrieve the current database version using PRAGMA.
-        let result = await db.getFirstAsync<{
-          user_version: number;
-        } | null>('PRAGMA user_version');
-        let currentDbVersion = result?.user_version ?? 0;
-
-        // If the current version is already equal or newer, no migration is needed.
-        if (currentDbVersion >= DATABASE_VERSION) {
-          console.log('No migration needed, DB version:', currentDbVersion);
-          return;
-        }
-
-        // For a new or uninitialized database (version 0), apply the initial migration.
-        if (currentDbVersion === 0) {
-          // Note: libSQL does not support WAL (Write-Ahead Logging) mode.
-          // await db.execAsync(`PRAGMA journal_mode = 'wal';`);
-
-          // Create the 'notes' table with three columns:
-          // - id: an integer primary key that cannot be null.
-          // - title: a text column.
-          // - content: a text column.
-          // - modifiedDate: a text column.
+          // First, ensure the table exists with the correct schema
+          console.log('Creating/ensuring notes table exists...');
           await db.execAsync(
             `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
           );
-          console.log(
-            'Initial migration applied, DB version:',
-            DATABASE_VERSION
-          );
-          // Update the current version after applying the initial migration.
-          currentDbVersion = 1;
-        } else {
-          console.log('DB version:', currentDbVersion);
+          
+          // Always ensure modifiedDate column exists
+          try {
+            console.log('Checking if modifiedDate column exists...');
+            const tableInfo = await db.getAllAsync('PRAGMA table_info(notes)');
+            const hasModifiedDate = tableInfo.some((col: any) => col.name === 'modifiedDate');
+            
+            if (!hasModifiedDate) {
+              console.log('Adding missing modifiedDate column...');
+              await db.execAsync(`ALTER TABLE notes ADD COLUMN modifiedDate TEXT DEFAULT datetime('now')`);
+              console.log('Successfully added modifiedDate column');
+            } else {
+              console.log('modifiedDate column already exists');
+            }
+            
+            // Log final schema
+            const finalTableInfo = await db.getAllAsync('PRAGMA table_info(notes)');
+            console.log('Final notes table schema:', finalTableInfo);
+            
+          } catch (columnError) {
+            console.log('Error checking/adding modifiedDate column:', columnError);
+          }
+
+          // Set database version
+          await db.execAsync(`PRAGMA user_version = 2`);
+          console.log('Database initialization completed successfully');
+
+          // Sync with libSQL after local setup is complete
+          try {
+            console.log('Starting libSQL sync...');
+            await db.syncLibSQL();
+            console.log('libSQL sync completed');
+          } catch (syncError) {
+            console.log('Error syncing with libSQL (this is often normal):', syncError);
+          }
+
+        } catch (error) {
+          console.log('Error during database initialization:', error);
         }
-
-        // Future migrations for later versions can be added here.
-        // Example:
-        // if (currentDbVersion === 1) {
-        //   // Add migration steps for upgrading from version 1 to a higher version.
-        // }
-
-        // Set the database version to the target version after migration.
-        await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);
       }}
     >
       <NotesProvider>

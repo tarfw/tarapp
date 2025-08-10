@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "notes-app",
-    "slug": "notes-app",
+    "name": "tarapp",
+    "slug": "tar-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.betoatexpo.notesapp"
+      "bundleIdentifier": "com.taros.tarapp"
     },
     "web": {
       "bundler": "metro",
@@ -30,7 +30,7 @@
       "typedRoutes": true
     },
     "android": {
-      "package": "com.betoatexpo.notesapp"
+      "package": "com.taros.tarapp"
     }
   }
 }

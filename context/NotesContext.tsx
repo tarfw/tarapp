@@ -47,8 +47,13 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   const syncIntervalRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    fetchNotes();
-  }, [db]);
+    // Add a small delay to ensure database initialization is complete
+    const timer = setTimeout(() => {
+      fetchNotes();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [db, fetchNotes]);
 
   useEffect(() => {
     return () => {
@@ -59,10 +64,36 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchNotes = useCallback(async () => {
-    const notes = await db.getAllAsync<Note>(
-      'SELECT * FROM notes ORDER BY modifiedDate DESC'
-    );
-    setNotes(notes);
+    try {
+      // First check if the table exists and has the required columns
+      const tableInfo = await db.getAllAsync('PRAGMA table_info(notes)');
+      const hasModifiedDate = tableInfo.some((col: any) => col.name === 'modifiedDate');
+      
+      if (!hasModifiedDate) {
+        console.log('modifiedDate column missing, adding it...');
+        await db.execAsync(`ALTER TABLE notes ADD COLUMN modifiedDate TEXT DEFAULT datetime('now')`);
+      }
+      
+      const notes = await db.getAllAsync<Note>(
+        'SELECT * FROM notes ORDER BY modifiedDate DESC'
+      );
+      setNotes(notes);
+    } catch (error) {
+      console.log('Error fetching notes:', error);
+      // If there's still an issue, try to create the table
+      try {
+        await db.execAsync(
+          `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
+        );
+        const notes = await db.getAllAsync<Note>(
+          'SELECT * FROM notes ORDER BY modifiedDate DESC'
+        );
+        setNotes(notes);
+      } catch (createError) {
+        console.log('Error creating table:', createError);
+        setNotes([]);
+      }
+    }
   }, [db]);
 
   const syncNotes = useCallback(async () => {
@@ -109,34 +140,55 @@ export function NotesProvider({ children }: { children: React.ReactNode }) {
       fetchNotes();
       return { ...newNote, id: result.lastInsertRowId.toString() };
     } catch (e) {
-      console.log(e);
+      console.log('Error creating note:', e);
+      // Try to ensure the table exists with the correct schema
+      try {
+        await db.execAsync(
+          `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
+        );
+        // Retry the insert
+        const result = await db.runAsync(
+          'INSERT INTO notes (title, content, modifiedDate) VALUES (?, ?, ?)',
+          newNote.title,
+          newNote.content,
+          newNote.modifiedDate.toISOString()
+        );
+        fetchNotes();
+        return { ...newNote, id: result.lastInsertRowId.toString() };
+      } catch (retryError) {
+        console.log('Error on retry:', retryError);
+      }
     }
   };
 
   const updateNote = async (id: string, updates: Partial<Note>) => {
-    // First get the existing note
-    const existingNote = await db.getFirstAsync<Note>(
-      'SELECT * FROM notes WHERE id = ?',
-      [id]
-    );
+    try {
+      // First get the existing note
+      const existingNote = await db.getFirstAsync<Note>(
+        'SELECT * FROM notes WHERE id = ?',
+        [id]
+      );
 
-    if (!existingNote) return;
+      if (!existingNote) return;
 
-    // Merge existing values with updates
-    const updatedNote = {
-      title: updates.title ?? existingNote.title,
-      content: updates.content ?? existingNote.content,
-      modifiedDate: updates.modifiedDate ?? new Date(),
-    };
+      // Merge existing values with updates
+      const updatedNote = {
+        title: updates.title ?? existingNote.title,
+        content: updates.content ?? existingNote.content,
+        modifiedDate: updates.modifiedDate ?? new Date(),
+      };
 
-    await db.runAsync(
-      'UPDATE notes SET title = ?, content = ?, modifiedDate = ? WHERE id = ?',
-      updatedNote.title,
-      updatedNote.content,
-      updatedNote.modifiedDate.toISOString(),
-      id
-    );
-    fetchNotes();
+      await db.runAsync(
+        'UPDATE notes SET title = ?, content = ?, modifiedDate = ? WHERE id = ?',
+        updatedNote.title,
+        updatedNote.content,
+        updatedNote.modifiedDate.toISOString(),
+        id
+      );
+      fetchNotes();
+    } catch (error) {
+      console.log('Error updating note:', error);
+    }
   };
   const deleteNote = (id: string) => {
     db.runAsync('DELETE FROM notes WHERE id = ?', id);

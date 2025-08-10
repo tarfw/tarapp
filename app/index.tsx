@@ -15,10 +15,12 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { Plus, Search, X } from 'lucide-react-native';
 import { SwipeableNote } from '../components/SwipeableNote';
 import { useNotes } from '../context/NotesContext';
+import { useSQLiteContext } from 'expo-sqlite';
 
 export default function NotesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const db = useSQLiteContext();
   const { notes, createNote, deleteNote, isSyncing, toggleSync, syncNotes } =
     useNotes();
 
@@ -65,6 +67,7 @@ export default function NotesScreen() {
                   
                 }}
               /> */}
+              <Button title="Push" onPress={() => db.syncLibSQL()} />
               <Button title="Pull" onPress={() => syncNotes()} />
             </View>
           ),

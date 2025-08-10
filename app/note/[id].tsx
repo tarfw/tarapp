@@ -10,6 +10,8 @@ export default function NoteScreen() {
   const router = useRouter();
   const { notes, updateNote } = useNotes();
   const [note, setNote] = useState({ title: '', content: '' });
+  const [originalNote, setOriginalNote] = useState({ title: '', content: '' });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -18,10 +20,13 @@ export default function NoteScreen() {
         [id as string]
       );
       if (currentNote) {
-        setNote({
+        const noteData = {
           title: currentNote.title || '',
           content: currentNote.content || '',
-        });
+        };
+        setNote(noteData);
+        setOriginalNote(noteData);
+        setHasUnsavedChanges(false);
       }
     };
     fetchNote();
@@ -29,12 +34,18 @@ export default function NoteScreen() {
 
   const handleTitleChange = (title: string) => {
     setNote((prev) => ({ ...prev, title }));
-    updateNote(id as string, { title });
+    setHasUnsavedChanges(title !== originalNote.title || note.content !== originalNote.content);
   };
 
   const handleContentChange = (content: string) => {
     setNote((prev) => ({ ...prev, content }));
-    updateNote(id as string, { content });
+    setHasUnsavedChanges(note.title !== originalNote.title || content !== originalNote.content);
+  };
+
+  const handleSave = async () => {
+    await updateNote(id as string, { title: note.title, content: note.content });
+    setOriginalNote({ title: note.title, content: note.content });
+    setHasUnsavedChanges(false);
   };
 
   return (
@@ -44,10 +55,9 @@ export default function NoteScreen() {
           headerTitle: note.title || 'Untitled',
           headerRight: () => (
             <Button
-              title="Push"
-              onPress={() => {
-                db.syncLibSQL();
-              }}
+              title="Save"
+              onPress={handleSave}
+              disabled={!hasUnsavedChanges}
             />
           ),
         }}

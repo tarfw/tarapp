@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { FileText, ChevronRight, X } from 'lucide-react-native';
+import { FileText, Package, ChevronRight, X } from 'lucide-react-native';
 
 export default function ModulesListScreen() {
   const router = useRouter();
@@ -21,6 +21,14 @@ export default function ModulesListScreen() {
       icon: FileText,
       color: '#007AFF',
       route: '/notes',
+    },
+    {
+      id: 'items',
+      title: 'Items',
+      description: 'Manage products, variants, and options',
+      icon: Package,
+      color: '#34C759',
+      route: '/items',
     },
   ];
 

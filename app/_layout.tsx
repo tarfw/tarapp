@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DB_NAME, NotesProvider, tursoOptions } from '../context/NotesContext';
+import { ItemsProvider } from '../context/ItemsContext';
 import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'react-native';
 
@@ -55,6 +56,60 @@ export default function RootLayout() {
             console.log('Error checking/adding modifiedDate column:', columnError);
           }
 
+          // Initialize Items tables
+          try {
+            console.log('Creating items tables...');
+            
+            // Create Items table
+            await db.execAsync(`
+              CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT,
+                options TEXT DEFAULT '[]'
+              );
+            `);
+
+            // Create Option Groups table
+            await db.execAsync(`
+              CREATE TABLE IF NOT EXISTS op_groups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                code TEXT
+              );
+            `);
+
+            // Create Option Values table
+            await db.execAsync(`
+              CREATE TABLE IF NOT EXISTS op_values (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER NOT NULL,
+                value TEXT NOT NULL,
+                code TEXT,
+                FOREIGN KEY (group_id) REFERENCES op_groups (id) ON DELETE CASCADE
+              );
+            `);
+
+            // Create Variants table
+            await db.execAsync(`
+              CREATE TABLE IF NOT EXISTS variants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER NOT NULL,
+                sku TEXT,
+                barcode TEXT,
+                price REAL NOT NULL DEFAULT 0,
+                stock INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'active',
+                options TEXT DEFAULT '[]',
+                FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE
+              );
+            `);
+
+            console.log('Items tables created successfully');
+          } catch (itemsError) {
+            console.log('Error creating items tables:', itemsError);
+          }
+
           // Set database version
           await db.execAsync(`PRAGMA user_version = 2`);
           console.log('Database initialization completed successfully');
@@ -74,6 +129,7 @@ export default function RootLayout() {
       }}
     >
       <NotesProvider>
+        <ItemsProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack
             screenOptions={{
@@ -108,6 +164,13 @@ export default function RootLayout() {
             />
 
             <Stack.Screen
+              name="items"
+              options={{
+                headerShown: false,
+              }}
+            />
+
+            <Stack.Screen
               name="note/[id]"
               options={{
                 headerShown: true,
@@ -117,6 +180,7 @@ export default function RootLayout() {
           </Stack>
           <StatusBar barStyle={'dark-content'} />
           </GestureHandlerRootView>
+        </ItemsProvider>
       </NotesProvider>
     </SQLiteProvider>
   );

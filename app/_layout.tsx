@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DB_NAME, NotesProvider, tursoOptions } from '../context/NotesContext';
-import { ItemsProvider } from '../context/ItemsContext';
 import { SQLiteDatabase, SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'react-native';
 
@@ -28,16 +27,10 @@ export default function RootLayout() {
             `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
           );
           
-          console.log('Creating/ensuring items table exists...');
+
+          console.log('Creating/ensuring notes table exists...');
           await db.execAsync(
-            `CREATE TABLE IF NOT EXISTS items (
-              id TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              sku TEXT UNIQUE,
-              barcode TEXT,
-              status TEXT DEFAULT 'active',
-              options JSON NOT NULL
-            );`
+            `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
           );
           
           // Always ensure modifiedDate column exists
@@ -81,7 +74,6 @@ export default function RootLayout() {
       }}
     >
       <NotesProvider>
-        <ItemsProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack
             screenOptions={{
@@ -114,28 +106,17 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
-            <Stack.Screen
-              name="items"
-              options={{
-                headerShown: false,
-              }}
-            />
+
             <Stack.Screen
               name="note/[id]"
               options={{
                 headerShown: true,
               }}
             />
-            <Stack.Screen
-              name="item/[id]"
-              options={{
-                headerShown: true,
-              }}
-            />
+
           </Stack>
           <StatusBar barStyle={'dark-content'} />
           </GestureHandlerRootView>
-        </ItemsProvider>
       </NotesProvider>
     </SQLiteProvider>
   );

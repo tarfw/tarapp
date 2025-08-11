@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { FileText, Package, Plus, Grid3X3 } from 'lucide-react-native';
+import { FileText, Plus, Grid3X3 } from 'lucide-react-native';
 
 export default function WorkspaceScreen() {
   const router = useRouter();
@@ -21,14 +21,6 @@ export default function WorkspaceScreen() {
       icon: FileText,
       color: '#007AFF',
       route: '/notes',
-    },
-    {
-      id: 'items',
-      title: 'Items',
-      description: 'Manage your items and inventory',
-      icon: Package,
-      color: '#34C759',
-      route: '/items',
     },
   ];
 

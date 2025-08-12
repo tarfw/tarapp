@@ -60,6 +60,11 @@ export default function NoteScreen() {
               disabled={!hasUnsavedChanges}
             />
           ),
+          headerShadowVisible: false,
+          headerStyle: {
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#E5E5E7',
+          },
         }}
       />
       <View style={styles.container}>

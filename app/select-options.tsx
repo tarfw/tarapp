@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useItems, OpGroup, OpValue } from '../context/ItemsContext';
+import { ArrowLeft } from 'lucide-react-native';
 
 export default function SelectOptionsScreen() {
   const router = useRouter();
@@ -107,7 +108,7 @@ export default function SelectOptionsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
+          <ArrowLeft size={24} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Select Options</Text>
         <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
@@ -168,11 +169,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 8,
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '400',
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',

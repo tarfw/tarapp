@@ -148,7 +148,7 @@ export default function CreateItemScreen() {
       const option = opValues.find(v => v.id === optionId);
       const group = option ? opGroups.find(g => g.id === option.group_id) : null;
       return option && group ? `${group.name}: ${option.value}` : null;
-    }).filter(Boolean);
+    }).filter((text): text is string => text !== null);
     
     return optionTexts.length > 0 ? optionTexts.join(', ') : 'Invalid options';
   };

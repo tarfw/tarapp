@@ -28,12 +28,6 @@ export default function RootLayout() {
             `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
           );
           
-
-          console.log('Creating/ensuring notes table exists...');
-          await db.execAsync(
-            `CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY NOT NULL, title TEXT, content TEXT, modifiedDate TEXT);`
-          );
-          
           // Always ensure modifiedDate column exists
           try {
             console.log('Checking if modifiedDate column exists...');
@@ -99,7 +93,7 @@ export default function RootLayout() {
                 barcode TEXT,
                 price REAL NOT NULL DEFAULT 0,
                 stock INTEGER NOT NULL DEFAULT 0,
-                status TEXT NOT NULL DEFAULT 'active',
+                status INTEGER NOT NULL DEFAULT 1,
                 options TEXT DEFAULT '[]',
                 FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE
               );
@@ -134,8 +128,8 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerShown: false,
-              animation: 'slide_from_right',
-              gestureEnabled: true,
+              animation: 'none',
+              gestureEnabled: false,
             }}
           >
             <Stack.Screen
@@ -145,13 +139,13 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="workspace"
+              name="(tabs)"
               options={{
                 headerShown: false,
               }}
             />
             <Stack.Screen
-              name="modules-list"
+              name="agents-list"
               options={{
                 headerShown: false,
               }}

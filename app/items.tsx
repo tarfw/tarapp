@@ -10,7 +10,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Stack } from 'expo-router';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { Trash2, Play, Square, RotateCw, Activity } from 'lucide-react-native';
@@ -290,7 +290,7 @@ export default function ItemsScreen() {
         const option = opValues.find(v => v.id === id);
         const group = option ? opGroups.find(g => g.id === option.group_id) : null;
         return option && group ? `${group.name}: ${option.value}` : null;
-      }).filter(Boolean);
+      }).filter((text): text is string => text !== null);
       
       return optionTexts.length > 0 ? optionTexts.join(', ') : 'Invalid options';
     } catch {
@@ -317,67 +317,77 @@ export default function ItemsScreen() {
     );
   };
 
-  const renderItem = ({ item }: { item: Item }) => (
-    <ReanimatedSwipeable
-      key={item.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
-      renderRightActions={RightAction(() => handleDeleteItem(item.id))}
-      overshootRight={false}
-      containerStyle={{ backgroundColor: '#FFFFFF' }}
-    >
-      <Pressable onPress={() => handleEditItem(item)} style={styles.itemContainer}>
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          {item.category && (
-            <Text style={styles.itemCategory}>Category: {item.category}</Text>
-          )}
-          <Text style={styles.itemOptions}>Options: {getOptionDisplayText(item.options)}</Text>
-        </View>
-      </Pressable>
-    </ReanimatedSwipeable>
-  );
-
-  const renderOpGroup = ({ item }: { item: OpGroup }) => (
-    <ReanimatedSwipeable
-      key={item.id}
-      friction={2}
-      enableTrackpadTwoFingerGesture
-      rightThreshold={40}
-      renderRightActions={RightAction(() => handleDeleteGroup(item.id))}
-      overshootRight={false}
-      containerStyle={{ backgroundColor: '#FFFFFF' }}
-    >
-      <Pressable onPress={() => handleEditGroup(item)} style={styles.itemContainer}>
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
-          <Text style={styles.itemCategory}>
-            Values: {opValues.filter(v => v.group_id === item.id).length}
-          </Text>
-        </View>
-      </Pressable>
-    </ReanimatedSwipeable>
-  );
-
-  const renderOpValue = ({ item }: { item: OpValue }) => {
-    const group = opGroups.find(g => g.id === item.group_id);
+  const renderItem = ({ item }: { item: Item }) => {
+    if (!item || !item.id) return null;
+    
     return (
       <ReanimatedSwipeable
-        key={item.id}
+        key={String(item.id)}
         friction={2}
         enableTrackpadTwoFingerGesture
         rightThreshold={40}
-        renderRightActions={RightAction(() => handleDeleteValue(item.id))}
+        renderRightActions={RightAction(() => handleDeleteItem(String(item.id)))}
+        overshootRight={false}
+        containerStyle={{ backgroundColor: '#FFFFFF' }}
+      >
+        <Pressable onPress={() => handleEditItem(item)} style={styles.itemContainer}>
+          <View style={styles.itemContent}>
+            <Text style={styles.itemName}>{String(item.name || 'Unnamed Item')}</Text>
+            {item.category && (
+              <Text style={styles.itemCategory}>Category: {String(item.category)}</Text>
+            )}
+            <Text style={styles.itemOptions}>Options: {getOptionDisplayText(item.options || '[]')}</Text>
+          </View>
+        </Pressable>
+      </ReanimatedSwipeable>
+    );
+  };
+
+  const renderOpGroup = ({ item }: { item: OpGroup }) => {
+    if (!item || !item.id) return null;
+    
+    return (
+      <ReanimatedSwipeable
+        key={String(item.id)}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        renderRightActions={RightAction(() => handleDeleteGroup(String(item.id)))}
+        overshootRight={false}
+        containerStyle={{ backgroundColor: '#FFFFFF' }}
+      >
+        <Pressable onPress={() => handleEditGroup(item)} style={styles.itemContainer}>
+          <View style={styles.itemContent}>
+            <Text style={styles.itemName}>{String(item.name || 'Unnamed Group')}</Text>
+            {item.code && <Text style={styles.itemCategory}>Code: {String(item.code)}</Text>}
+            <Text style={styles.itemCategory}>
+              Values: {String(opValues.filter(v => v.group_id === item.id).length)}
+            </Text>
+          </View>
+        </Pressable>
+      </ReanimatedSwipeable>
+    );
+  };
+
+  const renderOpValue = ({ item }: { item: OpValue }) => {
+    if (!item || !item.id) return null;
+    
+    const group = opGroups.find(g => g.id === item.group_id);
+    return (
+      <ReanimatedSwipeable
+        key={String(item.id)}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        renderRightActions={RightAction(() => handleDeleteValue(String(item.id)))}
         overshootRight={false}
         containerStyle={{ backgroundColor: '#FFFFFF' }}
       >
         <Pressable onPress={() => handleEditValue(item)} style={styles.itemContainer}>
           <View style={styles.itemContent}>
-            <Text style={styles.itemName}>{item.value}</Text>
-            <Text style={styles.itemCategory}>Group: {group?.name || 'Unknown'}</Text>
-            {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
+            <Text style={styles.itemName}>{String(item.value || 'Unnamed Value')}</Text>
+            <Text style={styles.itemCategory}>Group: {String(group?.name || 'Unknown')}</Text>
+            {item.code && <Text style={styles.itemCategory}>Code: {String(item.code)}</Text>}
           </View>
         </Pressable>
       </ReanimatedSwipeable>
@@ -385,11 +395,14 @@ export default function ItemsScreen() {
   };
 
   const renderVariant = ({ item }: { item: Variant }) => {
+    if (!item || !item.id || !item.item_id) return null;
+    
     const parentItem = items.find(i => i.id === item.item_id);
     
     // Convert numeric status to readable text
-    const getStatusText = (status: number): string => {
-      switch (status) {
+    const getStatusText = (status: string | number): string => {
+      const numStatus = Number(status);
+      switch (numStatus) {
         case 0: return 'Inactive';
         case 1: return 'Active';
         case 2: return 'Archived';
@@ -398,7 +411,7 @@ export default function ItemsScreen() {
     };
 
     // Get status color for minimal display
-    const getStatusColor = (status: number): string => {
+    const getStatusColor = (status: string | number): string => {
       // Ensure we're working with a number and handle string numbers
       const numStatus = Number(status);
       switch (numStatus) {
@@ -408,14 +421,20 @@ export default function ItemsScreen() {
         default: return '#22c55e'; // default to green
       }
     };
+
+    // Ensure all values are properly converted to strings
+    const itemName = String(parentItem?.name || 'Unknown Item');
+    const skuText = String(item.sku || 'No SKU');
+    const priceText = String((Number(item.price) || 0).toFixed(2));
+    const stockText = String(Number(item.stock) || 0);
     
     return (
       <ReanimatedSwipeable
-        key={item.id}
+        key={String(item.id)}
         friction={2}
         enableTrackpadTwoFingerGesture
         rightThreshold={40}
-        renderRightActions={RightAction(() => handleDeleteVariant(item.id))}
+        renderRightActions={RightAction(() => handleDeleteVariant(String(item.id)))}
         overshootRight={false}
         containerStyle={{ backgroundColor: '#FFFFFF' }}
       >
@@ -423,14 +442,14 @@ export default function ItemsScreen() {
           <View style={styles.variantContent}>
             <View style={styles.variantHeader}>
               <Text style={styles.variantTitle}>
-                {parentItem?.name || 'Unknown Item'}
+                {itemName}
               </Text>
-              <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+              <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status || 1) }]} />
             </View>
             <View style={styles.variantDetails}>
-              <Text style={styles.variantSku}>{item.sku || 'No SKU'}</Text>
-              <Text style={styles.variantPrice}>${item.price.toFixed(2)}</Text>
-              <Text style={styles.variantStock}>{item.stock} in stock</Text>
+              <Text style={styles.variantSku}>{skuText}</Text>
+              <Text style={styles.variantPrice}>${priceText}</Text>
+              <Text style={styles.variantStock}>{stockText} in stock</Text>
             </View>
           </View>
         </Pressable>
@@ -440,10 +459,10 @@ export default function ItemsScreen() {
 
   const getCurrentData = () => {
     switch (activeTab) {
-      case 'items': return items;
-      case 'groups': return opGroups;
-      case 'values': return opValues;
-      case 'variants': return variants;
+      case 'items': return items.filter(item => item && item.id && item.name);
+      case 'groups': return opGroups.filter(group => group && group.id && group.name);
+      case 'values': return opValues.filter(value => value && value.id && value.value);
+      case 'variants': return variants.filter(variant => variant && variant.id && variant.item_id);
       default: return [];
     }
   };
@@ -458,10 +477,36 @@ export default function ItemsScreen() {
     }
   };
 
+  const getAddButtonText = () => {
+    switch (activeTab) {
+      case 'items': return '+ Add Item';
+      case 'groups': return '+ Add Group';
+      case 'values': return '+ Add Value';
+      case 'variants': return '+ Add Variant';
+      default: return '+ Add Item';
+    }
+  };
+
+  // Debug logging
+  console.log('ItemsScreen render - activeTab:', activeTab);
+  console.log('ItemsScreen render - items count:', items.length);
+  console.log('ItemsScreen render - current data count:', getCurrentData().length);
+
   return (
-    <View style={styles.container}>
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Items Management',
+          headerShadowVisible: false,
+          headerStyle: {
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#E5E5E7',
+          },
+        }}
+      />
+      <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Items Management</Text>
         <View style={styles.syncContainer}>
           <TouchableOpacity
             style={[styles.iconButton, isSyncing && styles.iconButtonActive]}
@@ -492,7 +537,7 @@ export default function ItemsScreen() {
             onPress={() => setActiveTab(tab)}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {String(tab.charAt(0).toUpperCase() + tab.slice(1))}
             </Text>
           </TouchableOpacity>
         ))}
@@ -500,11 +545,25 @@ export default function ItemsScreen() {
 
       <FlatList
         data={getCurrentData()}
-        renderItem={getCurrentRenderer()}
-        keyExtractor={(item) => item.id}
+        renderItem={(props) => {
+          try {
+            const renderer = getCurrentRenderer();
+            return renderer(props);
+          } catch (error) {
+            console.error('Error rendering item:', error, props);
+            return (
+              <View style={styles.itemContainer}>
+                <Text style={styles.itemName}>Error rendering item</Text>
+              </View>
+            );
+          }
+        }}
+        keyExtractor={(item) => String(item?.id || Math.random())}
         style={styles.list}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No {activeTab} found</Text>
+          <View style={{ padding: 20 }}>
+            <Text style={styles.emptyText}>No {String(activeTab)} found</Text>
+          </View>
         }
       />
 
@@ -523,10 +582,11 @@ export default function ItemsScreen() {
         }}
       >
         <Text style={styles.addButtonText}>
-          + Add {activeTab === 'items' ? 'Item' : activeTab === 'groups' ? 'Group' : activeTab === 'values' ? 'Value' : 'Variant'}
+          {getAddButtonText()}
         </Text>
       </TouchableOpacity>
     </View>
+    </>
   );
 }
 
@@ -537,17 +597,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#000',
   },
   syncContainer: {
     flexDirection: 'row',

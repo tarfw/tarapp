@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { Plus, Search, X, ArrowLeft } from 'lucide-react-native';
 import { SwipeableNote } from '../components/SwipeableNote';
 import { useNotes } from '../context/NotesContext';
@@ -79,9 +79,14 @@ export default function NotesScreen() {
               <Button title="Pull" onPress={() => syncNotes()} />
             </View>
           ),
+          headerShadowVisible: false,
+          headerStyle: {
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#E5E5E7',
+          },
         }}
       />
-      <Animated.View entering={FadeIn} style={styles.notesList}>
+      <Animated.View style={styles.notesList}>
         <FlatList
           data={filteredNotes}
           renderItem={renderNote}

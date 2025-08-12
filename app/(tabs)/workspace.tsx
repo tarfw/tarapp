@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { FileText, Plus, Grid3X3 } from 'lucide-react-native';
 
 export default function WorkspaceScreen() {
@@ -29,7 +29,7 @@ export default function WorkspaceScreen() {
   };
 
   const handleTitlePress = () => {
-    router.push('/modules-list');
+    router.push('/agents-list');
   };
 
   return (
@@ -43,14 +43,14 @@ export default function WorkspaceScreen() {
               <Text style={styles.headerTitle}>Workspace</Text>
             </Pressable>
           ),
-          headerRight: () => (
-            <Pressable onPress={handleTitlePress}>
-              <Grid3X3 size={24} color="#007AFF" />
-            </Pressable>
-          ),
+          headerShadowVisible: false,
+          headerStyle: {
+            borderBottomWidth: 0.5,
+            borderBottomColor: '#E5E5E7',
+          },
         }}
       />
-      <Animated.View entering={FadeIn} style={styles.container}>
+      <Animated.View style={styles.container}>
         <ScrollView 
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}

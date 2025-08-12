@@ -8,10 +8,16 @@ import {
   TextInput,
   Alert,
   Modal,
+  Pressable,
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, { SharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { Trash2, Play, Square, RotateCw, Activity } from 'lucide-react-native';
 import { useItems, Item, OpGroup, OpValue, Variant } from '../context/ItemsContext';
 
 export default function ItemsScreen() {
+  const router = useRouter();
   const {
     items,
     opGroups,
@@ -90,13 +96,7 @@ export default function ItemsScreen() {
   };
 
   const handleEditItem = (item: Item) => {
-    setEditingItem(item);
-    setFormData({
-      name: item.name,
-      category: item.category || '',
-      options: item.options,
-    });
-    setModalVisible(true);
+    router.push(`/create-item?itemId=${item.id}`);
   };
 
   const handleDeleteItem = (id: string) => {
@@ -188,12 +188,7 @@ export default function ItemsScreen() {
   };
 
   const handleEditGroup = (group: OpGroup) => {
-    setEditingGroup(group);
-    setGroupFormData({
-      name: group.name,
-      code: group.code || '',
-    });
-    setModalVisible(true);
+    router.push(`/create-group?groupId=${group.id}`);
   };
 
   const handleDeleteGroup = (id: string) => {
@@ -228,13 +223,8 @@ export default function ItemsScreen() {
   };
 
   const handleEditValue = (value: OpValue) => {
-    setEditingValue(value);
-    setValueFormData({
-      group_id: value.group_id,
-      value: value.value,
-      code: value.code || '',
-    });
-    setModalVisible(true);
+    const id = value.id;
+    router.push(`/create-value?valueId=${id}`);
   };
 
   const handleDeleteValue = (id: string) => {
@@ -275,17 +265,7 @@ export default function ItemsScreen() {
   };
 
   const handleEditVariant = (variant: Variant) => {
-    setEditingVariant(variant);
-    setVariantFormData({
-      item_id: variant.item_id,
-      sku: variant.sku || '',
-      barcode: variant.barcode || '',
-      price: variant.price.toString(),
-      stock: variant.stock.toString(),
-      status: variant.status,
-      options: variant.options,
-    });
-    setModalVisible(true);
+    router.push(`/create-variant?variantId=${variant.id}`);
   };
 
   const handleDeleteVariant = (id: string) => {
@@ -299,111 +279,162 @@ export default function ItemsScreen() {
     );
   };
 
+  const getOptionDisplayText = (optionsJson: string) => {
+    try {
+      const optionIds = JSON.parse(optionsJson);
+      if (!Array.isArray(optionIds) || optionIds.length === 0) {
+        return 'No options selected';
+      }
+      
+      const optionTexts = optionIds.map(id => {
+        const option = opValues.find(v => v.id === id);
+        const group = option ? opGroups.find(g => g.id === option.group_id) : null;
+        return option && group ? `${group.name}: ${option.value}` : null;
+      }).filter(Boolean);
+      
+      return optionTexts.length > 0 ? optionTexts.join(', ') : 'Invalid options';
+    } catch {
+      return 'Invalid options format';
+    }
+  };
+
+  const RightAction = (onDelete: () => void) => (
+    prog: SharedValue<number>,
+    drag: SharedValue<number>
+  ) => {
+    const styleAnimation = useAnimatedStyle(() => {
+      return {
+        transform: [{ translateX: drag.value + 60 }],
+      };
+    });
+
+    return (
+      <Pressable onPress={onDelete}>
+        <Reanimated.View style={[styleAnimation, styles.rightAction]}>
+          <Trash2 size={24} color="#FF3B30" />
+        </Reanimated.View>
+      </Pressable>
+    );
+  };
+
   const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.itemContainer}>
-      <View style={styles.itemContent}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        {item.category && <Text style={styles.itemCategory}>Category: {item.category}</Text>}
-        <Text style={styles.itemOptions}>Options: {item.options}</Text>
-      </View>
-      <View style={styles.itemActions}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.editButton]}
-          onPress={() => handleEditItem(item)}
-        >
-          <Text style={styles.actionButtonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => handleDeleteItem(item.id)}
-        >
-          <Text style={styles.actionButtonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <ReanimatedSwipeable
+      key={item.id}
+      friction={2}
+      enableTrackpadTwoFingerGesture
+      rightThreshold={40}
+      renderRightActions={RightAction(() => handleDeleteItem(item.id))}
+      overshootRight={false}
+      containerStyle={{ backgroundColor: '#FFFFFF' }}
+    >
+      <Pressable onPress={() => handleEditItem(item)} style={styles.itemContainer}>
+        <View style={styles.itemContent}>
+          <Text style={styles.itemName}>{item.name}</Text>
+          {item.category && (
+            <Text style={styles.itemCategory}>Category: {item.category}</Text>
+          )}
+          <Text style={styles.itemOptions}>Options: {getOptionDisplayText(item.options)}</Text>
+        </View>
+      </Pressable>
+    </ReanimatedSwipeable>
   );
 
   const renderOpGroup = ({ item }: { item: OpGroup }) => (
-    <View style={styles.itemContainer}>
-      <View style={styles.itemContent}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
-        <Text style={styles.itemCategory}>
-          Values: {opValues.filter(v => v.group_id === item.id).length}
-        </Text>
-      </View>
-      <View style={styles.itemActions}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.editButton]}
-          onPress={() => handleEditGroup(item)}
-        >
-          <Text style={styles.actionButtonText}>Edit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => handleDeleteGroup(item.id)}
-        >
-          <Text style={styles.actionButtonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    <ReanimatedSwipeable
+      key={item.id}
+      friction={2}
+      enableTrackpadTwoFingerGesture
+      rightThreshold={40}
+      renderRightActions={RightAction(() => handleDeleteGroup(item.id))}
+      overshootRight={false}
+      containerStyle={{ backgroundColor: '#FFFFFF' }}
+    >
+      <Pressable onPress={() => handleEditGroup(item)} style={styles.itemContainer}>
+        <View style={styles.itemContent}>
+          <Text style={styles.itemName}>{item.name}</Text>
+          {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
+          <Text style={styles.itemCategory}>
+            Values: {opValues.filter(v => v.group_id === item.id).length}
+          </Text>
+        </View>
+      </Pressable>
+    </ReanimatedSwipeable>
   );
 
   const renderOpValue = ({ item }: { item: OpValue }) => {
     const group = opGroups.find(g => g.id === item.group_id);
     return (
-      <View style={styles.itemContainer}>
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>{item.value}</Text>
-          <Text style={styles.itemCategory}>Group: {group?.name || 'Unknown'}</Text>
-          {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
-        </View>
-        <View style={styles.itemActions}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => handleEditValue(item)}
-          >
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteValue(item.id)}
-          >
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ReanimatedSwipeable
+        key={item.id}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        renderRightActions={RightAction(() => handleDeleteValue(item.id))}
+        overshootRight={false}
+        containerStyle={{ backgroundColor: '#FFFFFF' }}
+      >
+        <Pressable onPress={() => handleEditValue(item)} style={styles.itemContainer}>
+          <View style={styles.itemContent}>
+            <Text style={styles.itemName}>{item.value}</Text>
+            <Text style={styles.itemCategory}>Group: {group?.name || 'Unknown'}</Text>
+            {item.code && <Text style={styles.itemCategory}>Code: {item.code}</Text>}
+          </View>
+        </Pressable>
+      </ReanimatedSwipeable>
     );
   };
 
   const renderVariant = ({ item }: { item: Variant }) => {
     const parentItem = items.find(i => i.id === item.item_id);
+    
+    // Convert numeric status to readable text
+    const getStatusText = (status: number): string => {
+      switch (status) {
+        case 0: return 'Inactive';
+        case 1: return 'Active';
+        case 2: return 'Archived';
+        default: return 'Active';
+      }
+    };
+
+    // Get status color for minimal display
+    const getStatusColor = (status: number): string => {
+      // Ensure we're working with a number and handle string numbers
+      const numStatus = Number(status);
+      switch (numStatus) {
+        case 0: return '#ef4444'; // red - Inactive
+        case 1: return '#22c55e'; // green - Active
+        case 2: return '#f59e0b'; // orange - Archived
+        default: return '#22c55e'; // default to green
+      }
+    };
+    
     return (
-      <View style={styles.itemContainer}>
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>
-            {parentItem?.name || 'Unknown Item'} - {item.sku || 'No SKU'}
-          </Text>
-          <Text style={styles.itemCategory}>Price: ${item.price.toFixed(2)}</Text>
-          <Text style={styles.itemCategory}>Stock: {item.stock}</Text>
-          <Text style={styles.itemCategory}>Status: {item.status}</Text>
-          {item.barcode && <Text style={styles.itemCategory}>Barcode: {item.barcode}</Text>}
-        </View>
-        <View style={styles.itemActions}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.editButton]}
-            onPress={() => handleEditVariant(item)}
-          >
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteVariant(item.id)}
-          >
-            <Text style={styles.actionButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ReanimatedSwipeable
+        key={item.id}
+        friction={2}
+        enableTrackpadTwoFingerGesture
+        rightThreshold={40}
+        renderRightActions={RightAction(() => handleDeleteVariant(item.id))}
+        overshootRight={false}
+        containerStyle={{ backgroundColor: '#FFFFFF' }}
+      >
+        <Pressable onPress={() => handleEditVariant(item)} style={styles.variantContainer}>
+          <View style={styles.variantContent}>
+            <View style={styles.variantHeader}>
+              <Text style={styles.variantTitle}>
+                {parentItem?.name || 'Unknown Item'}
+              </Text>
+              <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+            </View>
+            <View style={styles.variantDetails}>
+              <Text style={styles.variantSku}>{item.sku || 'No SKU'}</Text>
+              <Text style={styles.variantPrice}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.variantStock}>{item.stock} in stock</Text>
+            </View>
+          </View>
+        </Pressable>
+      </ReanimatedSwipeable>
     );
   };
 
@@ -433,24 +464,22 @@ export default function ItemsScreen() {
         <Text style={styles.title}>Items Management</Text>
         <View style={styles.syncContainer}>
           <TouchableOpacity
-            style={[styles.syncButton, isSyncing && styles.syncButtonActive]}
+            style={[styles.iconButton, isSyncing && styles.iconButtonActive]}
             onPress={() => toggleSync(!isSyncing)}
           >
-            <Text style={styles.syncButtonText}>
-              {isSyncing ? 'Stop Sync' : 'Start Sync'}
-            </Text>
+            {isSyncing ? <Square size={20} color="#fff" /> : <Play size={20} color="#fff" />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.syncButton} onPress={syncItems}>
-            <Text style={styles.syncButtonText}>Manual Sync</Text>
+          <TouchableOpacity style={styles.iconButton} onPress={syncItems}>
+            <RotateCw size={20} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.syncButton} onPress={handleCheckHealth}>
-            <Text style={styles.syncButtonText}>Health</Text>
+          <TouchableOpacity style={styles.iconButton} onPress={handleCheckHealth}>
+            <Activity size={20} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.syncButton, { backgroundColor: '#FF3B30' }]} 
+            style={[styles.iconButton, styles.resetButton]} 
             onPress={handleResetDatabase}
           >
-            <Text style={styles.syncButtonText}>Reset DB</Text>
+            <Text style={styles.resetButtonText}>Reset DB</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -483,297 +512,20 @@ export default function ItemsScreen() {
         style={styles.addButton}
         onPress={() => {
           if (activeTab === 'items') {
-            resetForm();
+            router.push('/create-item');
           } else if (activeTab === 'groups') {
-            resetGroupForm();
+            router.push('/create-group');
           } else if (activeTab === 'values') {
-            resetValueForm();
+            router.push('/create-value');
           } else if (activeTab === 'variants') {
-            resetVariantForm();
+            router.push('/create-variant');
           }
-          setModalVisible(true);
         }}
       >
-        <Text style={styles.addButtonText}>
-          + Add {activeTab.charAt(0).toUpperCase() + activeTab.slice(0, -1)}
-        </Text>
+        <Text style={styles.addButtonText}>
+          + Add {activeTab === 'items' ? 'Item' : activeTab === 'groups' ? 'Group' : activeTab === 'values' ? 'Value' : 'Variant'}
+        </Text>
       </TouchableOpacity>
-
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {activeTab === 'items' && (
-              <>
-                <Text style={styles.modalTitle}>
-                  {editingItem ? 'Edit Item' : 'Create Item'}
-                </Text>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Item Name"
-                  value={formData.name}
-                  onChangeText={(text) => setFormData({ ...formData, name: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Category (optional)"
-                  value={formData.category}
-                  onChangeText={(text) => setFormData({ ...formData, category: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Options JSON (e.g., [])"
-                  value={formData.options}
-                  onChangeText={(text) => setFormData({ ...formData, options: text })}
-                  multiline
-                />
-
-                <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => {
-                      resetForm();
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.saveButton]}
-                    onPress={handleCreateItem}
-                  >
-                    <Text style={styles.modalButtonText}>
-                      {editingItem ? 'Update' : 'Create'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-
-            {activeTab === 'groups' && (
-              <>
-                <Text style={styles.modalTitle}>
-                  {editingGroup ? 'Edit Group' : 'Create Group'}
-                </Text>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Group Name"
-                  value={groupFormData.name}
-                  onChangeText={(text) => setGroupFormData({ ...groupFormData, name: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Code (optional)"
-                  value={groupFormData.code}
-                  onChangeText={(text) => setGroupFormData({ ...groupFormData, code: text })}
-                />
-
-                <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => {
-                      resetGroupForm();
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.saveButton]}
-                    onPress={handleCreateGroup}
-                  >
-                    <Text style={styles.modalButtonText}>
-                      {editingGroup ? 'Update' : 'Create'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-
-            {activeTab === 'values' && (
-              <>
-                <Text style={styles.modalTitle}>
-                  {editingValue ? 'Edit Value' : 'Create Value'}
-                </Text>
-                
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>Select Group:</Text>
-                  <View style={styles.pickerWrapper}>
-                    {opGroups.map((group) => (
-                      <TouchableOpacity
-                        key={group.id}
-                        style={[
-                          styles.pickerOption,
-                          valueFormData.group_id === group.id && styles.pickerOptionSelected
-                        ]}
-                        onPress={() => setValueFormData({ ...valueFormData, group_id: group.id })}
-                      >
-                        <Text style={[
-                          styles.pickerOptionText,
-                          valueFormData.group_id === group.id && styles.pickerOptionTextSelected
-                        ]}>
-                          {group.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Value"
-                  value={valueFormData.value}
-                  onChangeText={(text) => setValueFormData({ ...valueFormData, value: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Code (optional)"
-                  value={valueFormData.code}
-                  onChangeText={(text) => setValueFormData({ ...valueFormData, code: text })}
-                />
-
-                <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => {
-                      resetValueForm();
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.saveButton]}
-                    onPress={handleCreateValue}
-                  >
-                    <Text style={styles.modalButtonText}>
-                      {editingValue ? 'Update' : 'Create'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-
-            {activeTab === 'variants' && (
-              <>
-                <Text style={styles.modalTitle}>
-                  {editingVariant ? 'Edit Variant' : 'Create Variant'}
-                </Text>
-                
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>Select Item:</Text>
-                  <View style={styles.pickerWrapper}>
-                    {items.map((item) => (
-                      <TouchableOpacity
-                        key={item.id}
-                        style={[
-                          styles.pickerOption,
-                          variantFormData.item_id === item.id && styles.pickerOptionSelected
-                        ]}
-                        onPress={() => setVariantFormData({ ...variantFormData, item_id: item.id })}
-                      >
-                        <Text style={[
-                          styles.pickerOptionText,
-                          variantFormData.item_id === item.id && styles.pickerOptionTextSelected
-                        ]}>
-                          {item.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="SKU (optional)"
-                  value={variantFormData.sku}
-                  onChangeText={(text) => setVariantFormData({ ...variantFormData, sku: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Barcode (optional)"
-                  value={variantFormData.barcode}
-                  onChangeText={(text) => setVariantFormData({ ...variantFormData, barcode: text })}
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Price"
-                  value={variantFormData.price}
-                  onChangeText={(text) => setVariantFormData({ ...variantFormData, price: text })}
-                  keyboardType="numeric"
-                />
-                
-                <TextInput
-                  style={styles.input}
-                  placeholder="Stock"
-                  value={variantFormData.stock}
-                  onChangeText={(text) => setVariantFormData({ ...variantFormData, stock: text })}
-                  keyboardType="numeric"
-                />
-                
-                <View style={styles.pickerContainer}>
-                  <Text style={styles.pickerLabel}>Status:</Text>
-                  <View style={styles.pickerWrapper}>
-                    {['active', 'inactive', 'archived'].map((status) => (
-                      <TouchableOpacity
-                        key={status}
-                        style={[
-                          styles.pickerOption,
-                          variantFormData.status === status && styles.pickerOptionSelected
-                        ]}
-                        onPress={() => setVariantFormData({ ...variantFormData, status })}
-                      >
-                        <Text style={[
-                          styles.pickerOptionText,
-                          variantFormData.status === status && styles.pickerOptionTextSelected
-                        ]}>
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => {
-                      resetVariantForm();
-                      setModalVisible(false);
-                    }}
-                  >
-                    <Text style={styles.modalButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.saveButton]}
-                    onPress={handleCreateVariant}
-                  >
-                    <Text style={styles.modalButtonText}>
-                      {editingVariant ? 'Update' : 'Create'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -781,7 +533,7 @@ export default function ItemsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -793,23 +545,32 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000',
   },
   syncContainer: {
     flexDirection: 'row',
     gap: 8,
   },
-  syncButton: {
+  iconButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  syncButtonActive: {
+  iconButtonActive: {
     backgroundColor: '#FF3B30',
   },
-  syncButtonText: {
+  resetButton: {
+    backgroundColor: '#FF3B30',
+    width: 'auto',
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  resetButtonText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
@@ -839,13 +600,15 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    padding: 16,
+    padding: 0,
+    backgroundColor: '#FFFFFF',
   },
   itemContainer: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -854,9 +617,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
+    color: '#000',
   },
   itemCategory: {
     fontSize: 14,
@@ -868,8 +632,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   itemActions: {
-    flexDirection: 'row',
-    gap: 8,
+    display: 'none',
   },
   actionButton: {
     paddingHorizontal: 12,
@@ -905,12 +668,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  rightAction: {
+    width: 60,
+    height: '100%',
+    paddingBottom: 12,
+    paddingRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
+  
   modalContent: {
     backgroundColor: '#fff',
     padding: 20,
@@ -988,5 +761,53 @@ const styles = StyleSheet.create({
   pickerOptionTextSelected: {
     color: '#fff',
     fontWeight: '600',
+  },
+  // Variant-specific minimal styles
+  variantContainer: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  variantContent: {
+    flex: 1,
+  },
+  variantHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  variantTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    flex: 1,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginLeft: 12,
+  },
+  variantDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  variantSku: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  variantPrice: {
+    fontSize: 13,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  variantStock: {
+    fontSize: 13,
+    color: '#666',
   },
 });

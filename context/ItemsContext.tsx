@@ -39,7 +39,7 @@ export interface Variant {
   barcode: string | null;
   price: number;
   stock: number;
-  status: string; // e.g. 'active', 'inactive', 'archived'
+  status: number; // 0=Inactive, 1=Active, 2=Archived
   options: string; // JSON string of option value IDs array
 }
 
@@ -68,6 +68,7 @@ interface ItemsContextType {
   createVariant: (variant: Omit<Variant, 'id'>) => Promise<Variant | undefined>;
   updateVariant: (id: string, updates: Partial<Variant>) => Promise<void>;
   deleteVariant: (id: string) => Promise<void>;
+  generateVariants: (itemId: string, selectedOptionIds: string[], basePrice?: number) => Promise<Variant[]>;
   
   // Sync operations
   syncItems: () => Promise<void>;
@@ -148,11 +149,27 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
           barcode TEXT,
           price REAL NOT NULL DEFAULT 0,
           stock INTEGER NOT NULL DEFAULT 0,
-          status TEXT NOT NULL DEFAULT 'active',
+          status INTEGER NOT NULL DEFAULT 1,
           options TEXT DEFAULT '[]',
           FOREIGN KEY (item_id) REFERENCES items (id) ON DELETE CASCADE
         );
       `);
+      
+      // Migrate existing TEXT status to INTEGER if needed
+      try {
+        await db.execAsync(`
+          UPDATE variants SET status = 
+            CASE 
+              WHEN status = 'active' THEN 1
+              WHEN status = 'inactive' THEN 0
+              WHEN status = 'archived' THEN 2
+              ELSE CAST(status AS INTEGER)
+            END
+          WHERE typeof(status) = 'text';
+        `);
+      } catch (error) {
+        console.log('Status migration not needed or already completed');
+      }
 
       console.log('Items tables initialized successfully');
       
@@ -180,7 +197,12 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   const fetchItems = useCallback(async () => {
     try {
       const items = await db.getAllAsync<Item>('SELECT * FROM items ORDER BY name');
-      setItems(items);
+      // Ensure IDs are strings for consistency
+      const itemsWithStringIds = items.map(item => ({
+        ...item,
+        id: String(item.id)
+      }));
+      setItems(itemsWithStringIds);
     } catch (error) {
       console.error('Error fetching items:', error);
       setItems([]);
@@ -190,7 +212,12 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   const fetchOpGroups = useCallback(async () => {
     try {
       const groups = await db.getAllAsync<OpGroup>('SELECT * FROM op_groups ORDER BY name');
-      setOpGroups(groups);
+      // Ensure IDs are strings for consistency
+      const groupsWithStringIds = groups.map(group => ({
+        ...group,
+        id: String(group.id)
+      }));
+      setOpGroups(groupsWithStringIds);
     } catch (error) {
       console.error('Error fetching option groups:', error);
       setOpGroups([]);
@@ -200,7 +227,13 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
   const fetchOpValues = useCallback(async () => {
     try {
       const values = await db.getAllAsync<OpValue>('SELECT * FROM op_values ORDER BY group_id, value');
-      setOpValues(values);
+      // Ensure IDs are strings for consistency
+      const valuesWithStringIds = values.map(value => ({
+        ...value,
+        id: String(value.id),
+        group_id: String(value.group_id)
+      }));
+      setOpValues(valuesWithStringIds);
     } catch (error) {
       console.error('Error fetching option values:', error);
       setOpValues([]);
@@ -209,8 +242,33 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
 
   const fetchVariants = useCallback(async () => {
     try {
-      const variants = await db.getAllAsync<Variant>('SELECT * FROM variants ORDER BY item_id, sku');
-      setVariants(variants);
+      const variants = await db.getAllAsync<any>('SELECT * FROM variants ORDER BY item_id, sku');
+      // Ensure IDs are strings and status is numeric
+      const variantsWithCorrectTypes = variants.map(variant => {
+        let numericStatus = variant.status;
+        
+        // Convert string statuses to numeric if needed
+        if (typeof variant.status === 'string') {
+          switch (variant.status.toLowerCase()) {
+            case 'active': numericStatus = 1; break;
+            case 'inactive': numericStatus = 0; break;
+            case 'archived': numericStatus = 2; break;
+            default: 
+              // Try to parse as number if it's a string number like "0", "1", "2"
+              const parsed = parseInt(variant.status, 10);
+              numericStatus = isNaN(parsed) ? 1 : parsed;
+          }
+        }
+        
+        
+        return {
+          ...variant,
+          id: String(variant.id),
+          item_id: String(variant.item_id),
+          status: numericStatus
+        };
+      });
+      setVariants(variantsWithCorrectTypes);
     } catch (error) {
       console.error('Error fetching variants:', error);
       setVariants([]);
@@ -422,6 +480,80 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [db, fetchVariants]);
 
+  const generateVariants = useCallback(async (itemId: string, selectedOptionIds: string[], basePrice: number = 0) => {
+    try {
+      // Group the selected option values by their group
+      const optionValuesByGroup: { [groupId: string]: OpValue[] } = {};
+      
+      selectedOptionIds.forEach(optionId => {
+        const optionValue = opValues.find(v => v.id === optionId);
+        if (optionValue) {
+          if (!optionValuesByGroup[optionValue.group_id]) {
+            optionValuesByGroup[optionValue.group_id] = [];
+          }
+          optionValuesByGroup[optionValue.group_id].push(optionValue);
+        }
+      });
+
+      // Get all combinations using cartesian product
+      const combinations = getCartesianProduct(Object.values(optionValuesByGroup));
+      const createdVariants: Variant[] = [];
+
+      console.log(`Generating ${combinations.length} variants for item ${itemId}`);
+
+      // Create a variant for each combination
+      for (const combination of combinations) {
+        // Generate SKU based on combination
+        const skuParts = combination.map(option => {
+          const group = opGroups.find(g => g.id === option.group_id);
+          return option.code || option.value.substring(0, 3).toUpperCase();
+        });
+        const sku = skuParts.join('-');
+
+        // Create options array for this variant
+        const variantOptions = combination.map(option => option.id);
+        
+        const variantData: Omit<Variant, 'id'> = {
+          item_id: itemId,
+          sku: sku,
+          barcode: null,
+          price: basePrice,
+          stock: 0,
+          status: 1, // 1 = Active
+          options: JSON.stringify(variantOptions)
+        };
+
+        const createdVariant = await createVariant(variantData);
+        if (createdVariant) {
+          createdVariants.push(createdVariant);
+        }
+      }
+
+      console.log(`Successfully created ${createdVariants.length} variants`);
+      return createdVariants;
+    } catch (error) {
+      console.error('Error generating variants:', error);
+      throw error;
+    }
+  }, [opValues, opGroups, createVariant]);
+
+  // Helper function to get cartesian product of arrays
+  const getCartesianProduct = (arrays: OpValue[][]): OpValue[][] => {
+    if (arrays.length === 0) return [];
+    if (arrays.length === 1) return arrays[0].map(item => [item]);
+    
+    const result: OpValue[][] = [];
+    const restProduct = getCartesianProduct(arrays.slice(1));
+    
+    for (const item of arrays[0]) {
+      for (const restCombination of restProduct) {
+        result.push([item, ...restCombination]);
+      }
+    }
+    
+    return result;
+  };
+
   // Sync operations
   const syncItems = useCallback(async () => {
     console.log('Syncing items with Turso DB...');
@@ -495,6 +627,7 @@ export function ItemsProvider({ children }: { children: React.ReactNode }) {
         createVariant,
         updateVariant,
         deleteVariant,
+        generateVariants,
         syncItems,
         toggleSync,
         isSyncing,

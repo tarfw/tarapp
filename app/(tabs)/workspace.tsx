@@ -8,24 +8,123 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Animated from 'react-native-reanimated';
-import { FileText, Plus, Grid3X3 } from 'lucide-react-native';
+import { 
+  Plus, 
+  Circle, 
+  CheckCircle2, 
+  AlertCircle, 
+  Clock,
+  Smartphone,
+  Palette,
+  FileText,
+  Bell,
+  Users,
+  Settings
+} from 'lucide-react-native';
 
 export default function WorkspaceScreen() {
   const router = useRouter();
 
-  const modules = [
+  const tasks = [
     {
-      id: 'notes',
-      title: 'Notes',
-      description: 'Create and manage your notes',
+      id: '1',
+      title: 'Mobile design issues',
+      status: 'in-progress',
+      priority: 'high',
+      icon: Palette,
+      color: '#00D2FF',
+    },
+    {
+      id: '2',
+      title: 'Mobile apps release',
+      status: 'todo',
+      priority: 'medium',
+      icon: Smartphone,
+      color: '#8B5CF6',
+    },
+    {
+      id: '3',
+      title: 'iOS launch thoughts',
+      status: 'todo',
+      priority: 'high',
+      icon: Circle,
+      color: '#FF6B6B',
+    },
+    {
+      id: '4',
+      title: 'Android launch priorities',
+      status: 'in-progress',
+      priority: 'high',
+      icon: Circle,
+      color: '#FF9500',
+    },
+    {
+      id: '5',
+      title: 'Mobile document support',
+      status: 'todo',
+      priority: 'low',
       icon: FileText,
-      color: '#007AFF',
-      route: '/notes',
+      color: '#FFD60A',
+    },
+    {
+      id: '6',
+      title: 'Design weekly sync',
+      status: 'completed',
+      priority: 'medium',
+      icon: Circle,
+      color: '#8B5CF6',
+    },
+    {
+      id: '7',
+      title: 'US weekly sync',
+      status: 'todo',
+      priority: 'medium',
+      icon: Circle,
+      color: '#34C759',
+    },
+    {
+      id: '8',
+      title: 'Notification schedules',
+      status: 'in-progress',
+      priority: 'medium',
+      icon: Bell,
+      color: '#8B5CF6',
+    },
+    {
+      id: '9',
+      title: 'Documents improvements',
+      status: 'todo',
+      priority: 'low',
+      icon: Circle,
+      color: '#FFD60A',
     },
   ];
 
-  const handleModulePress = (route: string) => {
-    router.push(route as any);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return CheckCircle2;
+      case 'in-progress':
+        return Clock;
+      default:
+        return Circle;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return '#34C759';
+      case 'in-progress':
+        return '#FF9500';
+      default:
+        return '#8E8E93';
+    }
+  };
+
+  const handleTaskPress = (taskId: string) => {
+    // Navigate to task detail or handle task interaction
+    console.log('Task pressed:', taskId);
   };
 
   const handleTitlePress = () => {
@@ -37,56 +136,72 @@ export default function WorkspaceScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerLargeTitle: true,
           headerTitle: () => (
             <Pressable onPress={handleTitlePress}>
-              <Text style={styles.headerTitle}>Workspace</Text>
+              <Text style={styles.headerTitle}>Home</Text>
             </Pressable>
           ),
           headerShadowVisible: false,
           headerStyle: {
-            borderBottomWidth: 0.5,
-            borderBottomColor: '#E5E5E7',
+            backgroundColor: '#FAFAFA',
           },
+          headerRight: () => (
+            <Pressable style={styles.addButton}>
+              <Plus size={20} color="#6366F1" />
+            </Pressable>
+          ),
         }}
       />
       <Animated.View style={styles.container}>
         <ScrollView 
           style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome to your Workspace</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Choose a module to get started
-            </Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Circle size={16} color="#8E8E93" />
+              <Text style={styles.sectionTitle}>My Issues</Text>
+            </View>
           </View>
 
-          <View style={styles.modulesGrid}>
-            {modules.map((module) => {
-              const IconComponent = module.icon;
-              return (
-                <Pressable
-                  key={module.id}
-                  style={styles.moduleCard}
-                  onPress={() => handleModulePress(module.route)}
-                >
-                  <View style={[styles.iconContainer, { backgroundColor: `${module.color}15` }]}>
-                    <IconComponent size={32} color={module.color} />
-                  </View>
-                  <Text style={styles.moduleTitle}>{module.title}</Text>
-                  <Text style={styles.moduleDescription}>{module.description}</Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.section}>
+            <Text style={styles.categoryTitle}>Favorites</Text>
+            <View style={styles.tasksList}>
+              {tasks.map((task) => {
+                const StatusIcon = getStatusIcon(task.status);
+                const TaskIcon = task.icon;
+                return (
+                  <Pressable
+                    key={task.id}
+                    style={styles.taskItem}
+                    onPress={() => handleTaskPress(task.id)}
+                  >
+                    <View style={styles.taskContent}>
+                      <View style={styles.taskIconContainer}>
+                        <TaskIcon size={16} color={task.color} />
+                      </View>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                    </View>
+                    <StatusIcon 
+                      size={16} 
+                      color={getStatusColor(task.status)}
+                      style={styles.statusIcon}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
 
-          <View style={styles.quickActions}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <Pressable style={styles.quickActionButton}>
-              <Plus size={20} color="#007AFF" />
-              <Text style={styles.quickActionText}>Create New</Text>
+          <View style={styles.section}>
+            <Text style={styles.categoryTitle}>Teams</Text>
+            <Pressable style={styles.taskItem}>
+              <View style={styles.taskContent}>
+                <View style={styles.taskIconContainer}>
+                  <Smartphone size={16} color="#34C759" />
+                </View>
+                <Text style={styles.taskTitle}>Mobile</Text>
+              </View>
             </Pressable>
           </View>
         </ScrollView>
@@ -98,92 +213,77 @@ export default function WorkspaceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 20,
-  },
-  welcomeSection: {
-    marginBottom: 32,
-  },
-  welcomeTitle: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 28,
     fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+    color: '#1C1C1E',
+    marginLeft: 16,
   },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666666',
-    lineHeight: 22,
+  addButton: {
+    marginRight: 16,
+    padding: 8,
   },
-  modulesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
+  section: {
     marginBottom: 32,
   },
-  moduleCard: {
-    flex: 1,
-    minWidth: 150,
-    padding: 20,
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  moduleTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  moduleDescription: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  quickActions: {
-    marginTop: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#000',
-    marginBottom: 16,
+    color: '#1C1C1E',
+    marginLeft: 8,
   },
-  quickActionButton: {
+  categoryTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8E8E93',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+  },
+  tasksList: {
+    backgroundColor: '#FFFFFF',
+  },
+  taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#F8F8F8',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#F2F2F7',
   },
-  quickActionText: {
+  taskContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  taskIconContainer: {
+    marginRight: 12,
+  },
+  taskTitle: {
     fontSize: 16,
-    color: '#007AFF',
-    marginLeft: 12,
-    fontWeight: '500',
+    color: '#1C1C1E',
+    fontWeight: '400',
+    flex: 1,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
+  statusIcon: {
+    marginLeft: 12,
   },
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
 import { Square, Play, Mail } from 'lucide-react-native';
 
 export default function TabLayout() {
@@ -22,6 +23,20 @@ export default function TabLayout() {
         },
         tabBarPressColor: 'transparent',
         tabBarPressOpacity: 1,
+        tabBarButton: (props) => (
+          <TouchableOpacity
+            {...props}
+            activeOpacity={1}
+            style={[
+              props.style,
+              {
+                backgroundColor: 'transparent',
+              }
+            ]}
+          >
+            {props.children}
+          </TouchableOpacity>
+        ),
         headerShown: false,
       }}
     >

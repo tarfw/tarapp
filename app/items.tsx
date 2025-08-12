@@ -581,9 +581,9 @@ export default function ItemsScreen() {
           }
         }}
       >
-        <Text style={styles.addButtonText}>
+        <Text style={styles.addButtonText}>
           {getAddButtonText()}
-        </Text>
+        </Text>
       </TouchableOpacity>
     </View>
     </>

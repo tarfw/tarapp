@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function ProfileButton() {
@@ -27,16 +30,24 @@ export default function ProfileButton() {
       </TouchableOpacity>
 
       <Modal
-        animationType="fade"
-        transparent={true}
+        animationType="slide"
+        transparent={false}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <Pressable 
-          style={styles.modalOverlay} 
-          onPress={() => setModalVisible(false)}
-        >
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+        <ThemedView style={styles.fullScreenModal}>
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+            <ThemedText style={styles.screenTitle}>Profile</ThemedText>
+            <View style={{ width: 32 }} />
+          </View>
+          
+          <ScrollView contentContainerStyle={styles.modalContent}>
             <View style={styles.userInfo}>
               <View style={styles.userIcon}>
                 <Text style={styles.userIconText}>
@@ -45,13 +56,13 @@ export default function ProfileButton() {
               </View>
               {user ? (
                 <>
-                  <Text style={styles.userName}>{user.email || 'No email available'}</Text>
-                  <Text style={styles.userEmail}>User ID: {user.id || 'No ID available'}</Text>
+                  <ThemedText style={styles.userName}>{user.email || 'No email available'}</ThemedText>
+                  <ThemedText style={styles.userEmail}>User ID: {user.id || 'No ID available'}</ThemedText>
                 </>
               ) : (
                 <>
-                  <Text style={styles.userName}>Not signed in</Text>
-                  <Text style={styles.userEmail}>User ID: N/A</Text>
+                  <ThemedText style={styles.userName}>Not signed in</ThemedText>
+                  <ThemedText style={styles.userEmail}>User ID: N/A</ThemedText>
                 </>
               )}
             </View>
@@ -62,10 +73,10 @@ export default function ProfileButton() {
               style={styles.logoutButton} 
               onPress={handleLogout}
             >
-              <Text style={styles.logoutText}>Sign out</Text>
+              <ThemedText style={styles.logoutText}>Sign out</ThemedText>
             </TouchableOpacity>
-          </Pressable>
-        </Pressable>
+          </ScrollView>
+        </ThemedView>
       </Modal>
     </View>
   );
@@ -74,7 +85,7 @@ export default function ProfileButton() {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 50,
+    top: 30,
     right: 20,
     zIndex: 100,
   },
@@ -91,16 +102,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
-  modalOverlay: {
+  fullScreenModal: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: Colors.light.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.border,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.light.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: Colors.light.text,
+    fontWeight: '600',
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 24,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingTop: 24,
+    padding: 16,
+    paddingTop: 32,
   },
   userInfo: {
     alignItems: 'center',
@@ -127,16 +162,21 @@ const styles = StyleSheet.create({
   },
   userEmail: {
     fontSize: 15,
-    color: '#6B7280',
+    color: Colors.light.muted,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginHorizontal: 20,
+    backgroundColor: Colors.light.border,
+    width: '100%',
+    marginVertical: 10,
   },
   logoutButton: {
     paddingVertical: 16,
     alignItems: 'center',
+    width: '100%',
+    backgroundColor: Colors.light.surface,
+    borderRadius: 12,
+    marginTop: 16,
   },
   logoutText: {
     color: '#EF4444',

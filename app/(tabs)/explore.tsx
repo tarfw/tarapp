@@ -2,15 +2,13 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
-import ProfileButton from '@/components/ProfileButton';
 
 export default function ExploreScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
-      <ProfileButton />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <ThemedText type="title">Explore</ThemedText>
+          <ThemedText style={styles.screenTitle}>Explore</ThemedText>
         </View>
 
         <View style={styles.card}>
@@ -31,11 +29,16 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 12,
-    paddingTop: 80, // Add padding to account for profile button
+    paddingTop: 16, // Reduced padding since profile button is removed
   },
   headerRow: {
     paddingVertical: 8,
     marginBottom: 4,
+  },
+  screenTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    lineHeight: 24,
   },
   card: {
     backgroundColor: Colors.light.surface,

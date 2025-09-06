@@ -1,12 +1,13 @@
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import ProfileButton from '@/components/ProfileButton';
 
 export default function CreateScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
+      <ProfileButton />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <ThemedText type="title">Create</ThemedText>
@@ -39,6 +40,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 16,
+    paddingTop: 80, // Add padding to account for profile button
   },
   headerRow: {
     paddingVertical: 8,

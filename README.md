@@ -1,50 +1,46 @@
-# Welcome to your Expo app 👋
+# TAR App with Instant DB and Magic Code Auth
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This app includes a complete authentication flow using Instant DB with Magic Code authentication and Expo Router.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Magic Code authentication flow with separate screens
+- Protected routes
+- Instant DB integration
+- Expo Router for navigation
+- Keyboard-friendly layouts
 
-   ```bash
-   npm install
-   ```
+## Setup
 
-2. Start the app
+1. Create an account at [instantdb.com](https://instantdb.com)
+2. Create a new app in the Instant DB dashboard
+3. Replace `YOUR_INSTANT_APP_ID` in `config/instant.ts` with your actual app ID
+4. Run `npm install` to install dependencies
+5. Run `npx expo start` to start the app
 
-   ```bash
-   npx expo start
-   ```
+## Authentication Flow
 
-In the output, you'll find options to open the app in a
+1. Users enter their email on the login screen
+2. Users are navigated to a verification screen
+3. A magic code is sent to their email
+4. Users enter the code on the verification screen
+5. Once authenticated, users are redirected to the main app (workspace)
+6. Users can logout from the main screen
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `app/` - Main app screens
+- `app/login.tsx` - Email input screen
+- `app/verify.tsx` - Magic code verification screen
+- `app/(tabs)/` - Protected tab-based screens
+- `config/instant.ts` - Instant DB configuration
+- `contexts/AuthContext.tsx` - Authentication context and provider
+- `components/ProtectedRoute.tsx` - Component to protect routes
 
-## Get a fresh project
+## UX Improvements
 
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Separate screens for email input and code verification
+- Top-aligned content to prevent keyboard conflicts
+- No dialog notifications - all feedback is inline
+- Proper keyboard handling with KeyboardAvoidingView
+- Back navigation between auth screens

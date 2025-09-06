@@ -1,12 +1,13 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
-
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import ProfileButton from '@/components/ProfileButton';
 
 export default function TaskScreen() {
   return (
     <ThemedView style={{ flex: 1 }}>
+      <ProfileButton />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
           <ThemedText type="title">Workspace</ThemedText>
@@ -35,6 +36,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     gap: 12,
+    paddingTop: 80, // Add padding to account for profile button
   },
   headerRow: {
     paddingVertical: 8,

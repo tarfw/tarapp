@@ -23,6 +23,8 @@ const MAPPING = {
   'checkmark.circle': 'check-circle',
   'circle': 'circle',
   'square': 'crop-square',
+  'brain': 'psychology',
+  '@': 'alternate-email',
 } as IconMapping;
 
 /**

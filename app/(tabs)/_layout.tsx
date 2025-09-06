@@ -36,17 +36,17 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="explore"
+          name="ai"
           options={{
-            title: 'Explore',
+            title: 'AI',
             tabBarIcon: ({ color }) => <IconSymbol size={28} name="circle" color={color} />,
           }}
         />
         <Tabs.Screen
-          name="create"
+          name="people"
           options={{
-            title: 'Create',
-            tabBarIcon: ({ color }) => <IconSymbol size={28} name="plus.circle.fill" color={color} />,
+            title: 'People',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="@" color={color} />,
           }}
         />
       </Tabs>

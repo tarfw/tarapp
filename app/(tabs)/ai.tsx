@@ -4,10 +4,12 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
 import { useAI } from '@/contexts/AIContext';
+import { agentComponents } from '@/components/agents';
 
 export default function AIScreen() {
   const router = useRouter();
   const { selectedAgent } = useAI();
+  const AgentComponent = agentComponents[selectedAgent as keyof typeof agentComponents];
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -19,6 +21,14 @@ export default function AIScreen() {
         >
           <ThemedText style={styles.selectedAgentName}>{selectedAgent}</ThemedText>
         </TouchableOpacity>
+        
+        <View style={styles.agentContainer}>
+          {AgentComponent ? (
+            <AgentComponent />
+          ) : (
+            <ThemedText>Agent component not found</ThemedText>
+          )}
+        </View>
       </ScrollView>
     </ThemedView>
   );
@@ -45,5 +55,9 @@ const styles = StyleSheet.create({
   selectedAgentName: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  agentContainer: {
+    width: '100%',
+    marginTop: 20,
   },
 });

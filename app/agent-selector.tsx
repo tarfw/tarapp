@@ -16,6 +16,7 @@ export default function AgentSelectorScreen() {
     { id: '2', name: 'Products', description: 'AI agent for product development' },
     { id: '3', name: 'Items', description: 'AI agent for item categorization' },
     { id: '4', name: 'Posts', description: 'AI agent for content creation' },
+    { id: '5', name: 'Order', description: 'AI agent for order management' },
   ];
 
   const handleSelectAgent = (agentName: string) => {

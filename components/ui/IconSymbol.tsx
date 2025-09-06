@@ -21,7 +21,7 @@ const MAPPING = {
   'plus.circle.fill': 'add-circle',
   'list.bullet': 'format-list-bulleted',
   'checkmark.circle': 'check-circle',
-  'circle': 'circle',
+  'circle': 'radio-button-unchecked',
   'square': 'crop-square',
   'brain': 'psychology',
   '@': 'alternate-email',

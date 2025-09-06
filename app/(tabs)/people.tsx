@@ -1,95 +1,136 @@
 import { ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Colors } from '@/constants/Colors';
+import { useState } from 'react';
 
 export default function PeopleScreen() {
-  const router = useRouter();
-  
-  // Mock data for conversations
-  const conversations = [
+  const [inboxItems, setInboxItems] = useState([
     {
       id: '1',
-      name: 'Alex Johnson',
-      lastMessage: 'Hey, are we still meeting tomorrow?',
-      time: '2:30 PM',
+      type: 'assigned',
+      title: 'Design onboarding flow',
+      project: 'Design',
+      description: 'You were assigned to this issue by Alex Johnson',
+      time: '2 hours ago',
       unread: true,
-      avatar: 'AJ'
+      issueId: 'DES-124'
     },
     {
       id: '2',
-      name: 'Sarah Miller',
-      lastMessage: 'Thanks for the feedback on the design',
-      time: '1:15 PM',
-      unread: false,
-      avatar: 'SM'
+      type: 'mentioned',
+      title: 'Fix login state regression',
+      project: 'Auth',
+      description: 'Sarah Miller mentioned you in a comment',
+      time: '4 hours ago',
+      unread: true,
+      issueId: 'AUTH-87'
     },
     {
       id: '3',
-      name: 'Tech Team',
-      lastMessage: 'Alex: I\'ve pushed the latest changes',
-      time: '12:45 PM',
-      unread: true,
-      avatar: 'TT'
+      type: 'comment',
+      title: 'Add deep link support',
+      project: 'Mobile',
+      description: 'New comment on an issue you\'re subscribed to',
+      time: 'Yesterday',
+      unread: false,
+      issueId: 'MOB-231'
     },
     {
       id: '4',
-      name: 'Michael Chen',
-      lastMessage: 'The project is ready for review',
-      time: '11:20 AM',
+      type: 'status',
+      title: 'API documentation update',
+      project: 'Backend',
+      description: 'Status changed from In Progress to Review',
+      time: '2 days ago',
       unread: false,
-      avatar: 'MC'
+      issueId: 'API-45'
     },
     {
       id: '5',
-      name: 'Design Team',
-      lastMessage: 'Sarah: New mockups are uploaded',
-      time: '10:30 AM',
+      type: 'review',
+      title: 'Homepage redesign',
+      project: 'Web',
+      description: 'Requested your review on this pull request',
+      time: '3 days ago',
       unread: false,
-      avatar: 'DT'
+      issueId: 'WEB-67'
     }
-  ];
+  ]);
+
+  const markAsDone = (itemId: string) => {
+    setInboxItems(prevItems => prevItems.filter(item => item.id !== itemId));
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'assigned': return '👤';
+      case 'mentioned': return '@';
+      case 'comment': return '💬';
+      case 'status': return '🔄';
+      case 'review': return '👀';
+      default: return '📋';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'assigned': return '#3B82F6';
+      case 'mentioned': return '#F59E0B';
+      case 'comment': return '#10B981';
+      case 'status': return '#8B5CF6';
+      case 'review': return '#EC4899';
+      default: return Colors.light.muted;
+    }
+  };
 
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <ThemedText style={styles.screenTitle}>People</ThemedText>
+          <ThemedText style={styles.screenTitle}>Inbox</ThemedText>
+          <ThemedText style={styles.itemCount}>{inboxItems.length} items</ThemedText>
         </View>
 
-        {conversations.map((conversation) => (
-          <TouchableOpacity 
-            key={conversation.id} 
-            style={styles.conversationCard} 
-            activeOpacity={0.7}
-            onPress={() => router.push(`/chat/${conversation.id}`)}
-          >
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <ThemedText style={styles.avatarText}>{conversation.avatar}</ThemedText>
+        {inboxItems.length === 0 ? (
+          <View style={styles.emptyState}>
+            <ThemedText style={styles.emptyStateTitle}>Inbox Zero! 🎉</ThemedText>
+            <ThemedText style={styles.emptyStateText}>
+              You've reviewed all items that need your attention.
+            </ThemedText>
+          </View>
+        ) : (
+          <View>
+            {inboxItems.map((item, index) => (
+              <View key={item.id}>
+                <View style={styles.inboxItem}>
+                  <View style={styles.itemHeader}>
+                    <View style={[styles.typeIndicator, { backgroundColor: getTypeColor(item.type) }]}>
+                      <ThemedText style={styles.typeIcon}>{getTypeIcon(item.type)}</ThemedText>
+                    </View>
+                    <View style={styles.itemContent}>
+                      <View style={styles.itemHeaderRow}>
+                        <ThemedText style={styles.issueId}>{item.issueId}</ThemedText>
+                        <ThemedText style={styles.timeText}>{item.time}</ThemedText>
+                      </View>
+                      <ThemedText style={styles.itemTitle} numberOfLines={1}>{item.title}</ThemedText>
+                      <ThemedText style={styles.projectText}>{item.project}</ThemedText>
+                    </View>
+                  </View>
+                  <View style={styles.actionRow}>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => markAsDone(item.id)}
+                    >
+                      <ThemedText style={styles.actionText}>Mark Done</ThemedText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                {index < inboxItems.length - 1 && <View style={styles.divider} />}
               </View>
-            </View>
-            
-            <View style={styles.conversationContent}>
-              <View style={styles.conversationHeader}>
-                <ThemedText style={styles.conversationName}>{conversation.name}</ThemedText>
-                <ThemedText style={styles.messageTime}>{conversation.time}</ThemedText>
-              </View>
-              
-              <ThemedText 
-                style={[styles.lastMessage, conversation.unread && styles.unreadMessage]}
-                numberOfLines={1}
-              >
-                {conversation.lastMessage}
-              </ThemedText>
-            </View>
-            
-            {conversation.unread && (
-              <View style={styles.unreadIndicator} />
-            )}
-          </TouchableOpacity>
-        ))}
+            ))}
+          </View>
+        )}
       </ScrollView>
     </ThemedView>
   );
@@ -98,73 +139,104 @@ export default function PeopleScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    gap: 12,
     paddingTop: 16,
   },
   headerRow: {
-    paddingVertical: 8,
-    marginBottom: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   screenTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     lineHeight: 24,
   },
-  conversationCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.light.background,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.light.border,
-    marginBottom: 8,
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.light.tint,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  conversationContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  conversationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  conversationName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  messageTime: {
-    fontSize: 12,
-    color: Colors.light.muted,
-  },
-  lastMessage: {
+  itemCount: {
     fontSize: 14,
     color: Colors.light.muted,
   },
-  unreadMessage: {
-    color: Colors.light.text,
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: Colors.light.muted,
+    textAlign: 'center',
+  },
+  inboxItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 0,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+  },
+  typeIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    marginTop: 2,
+  },
+  typeIcon: {
+    fontSize: 10,
+    color: 'white',
+    fontWeight: '600',
+  },
+  itemContent: {
+    flex: 1,
+  },
+  itemHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  issueId: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.light.tint,
+  },
+  timeText: {
+    fontSize: 12,
+    color: Colors.light.muted,
+  },
+  itemTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  projectText: {
+    fontSize: 13,
+    color: Colors.light.muted,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: Colors.light.surface,
+  },
+  actionText: {
+    fontSize: 12,
+    color: Colors.light.tint,
     fontWeight: '500',
   },
-  unreadIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.light.tint,
-    alignSelf: 'center',
+  divider: {
+    height: 1,
+    backgroundColor: Colors.light.border,
+    marginLeft: 32,
   },
 });

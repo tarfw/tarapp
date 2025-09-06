@@ -27,6 +27,7 @@ export default function TabLayout() {
               backgroundColor: Colors.light.background,
             },
           }),
+          tabBarShowLabel: false, // Hide the icon titles
         }}>
         <Tabs.Screen
           name="index"

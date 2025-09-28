@@ -38,7 +38,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={lightTheme}>
-      <Stack>
+      <Stack 
+        screenOptions={{
+          headerShown: false
+        }}
+      >
         <Stack.Screen 
           name="index" 
           options={{ headerShown: false }} 
@@ -48,7 +52,6 @@ export default function RootLayout() {
           options={{ 
             headerShown: true, 
             headerTitle: "Sign In",
-            presentation: "modal"
           }} 
         />
         <Stack.Screen 

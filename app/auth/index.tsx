@@ -12,5 +12,9 @@ export default function AuthIndex() {
   }
 
   // Show auth screen if not signed in
+  if (isLoading) {
+    return null; // Show nothing while loading
+  }
+  
   return <AuthScreen />;
 }

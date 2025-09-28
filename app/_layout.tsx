@@ -1,5 +1,4 @@
 import {
-  DarkTheme,
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
@@ -9,29 +8,56 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { db } from "@/lib/db";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  // Initialize auth state at the root
+  db.useAuth();
+
+  // Force light theme only
+  const lightTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: '#0a7ea4',
+      background: '#f8f9fa',
+      card: '#ffffff',
+      text: '#1d1d1d',
+      border: '#d1d5db',
+      notification: '#ef4444',
+    },
+  };
+
   if (!loaded) {
-    // Async font loading only occurs in development.
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={lightTheme}>
       <Stack>
-        <Stack.Screen
-          name="index"
-          options={{ headerShown: true, headerTitle: "My Instant App" }}
+        <Stack.Screen 
+          name="index" 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="auth/index" 
+          options={{ 
+            headerShown: true, 
+            headerTitle: "Sign In",
+            presentation: "modal"
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)/_layout" 
+          options={{ headerShown: false }} 
         />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

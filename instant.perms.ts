@@ -3,22 +3,179 @@
 import type { InstantRules } from '@instantdb/react-native';
 
 const rules = {
-  /**
-   * Welcome to Instant's permission system!
-   * Right now your rules are empty. To start filling them in, check out the docs:
-   * https://www.instantdb.com/docs/permissions
-   *
-   * Here's an example to give you a feel:
-   * posts: {
-   *   allow: {
-   *     view: "true",
-   *     create: "isOwner",
-   *     update: "isOwner",
-   *     delete: "isOwner",
-   *   },
-   *   bind: ["isOwner", "auth.id != null && auth.id == data.ownerId"],
-   * },
-   */
+  "products": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.userId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "customers": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "lineItems": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "tasks": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "productVariants": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "collections": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "locations": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "inventoryMovements": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "taskComments": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "payments": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "$default": {
+    "allow": {
+      "$default": false
+    }
+  },
+  "stores": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "taskCategories": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "team": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  },
+  "orders": {
+    "bind": [
+      "isOwner",
+      "auth.id != null && auth.id == data.creatorId"
+    ],
+    "allow": {
+      "view": "true",
+      "create": "isOwner",
+      "delete": "isOwner",
+      "update": "isOwner"
+    }
+  }
 } satisfies InstantRules;
 
 export default rules;

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import db from '../../lib/db';
 import { id } from '@instantdb/react-native';
 
@@ -11,9 +12,9 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text>Loading...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -63,7 +64,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.header}>My Tasks</Text>
       
       <View style={styles.inputContainer}>
@@ -82,7 +83,7 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         style={styles.list}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white', // Changed to white background
   },
   header: {
     fontSize: 24,

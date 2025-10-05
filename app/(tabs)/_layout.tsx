@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { ProtectedRoute } from '../../lib/ProtectedRoute';
+import { AuthListener } from '../../lib/AuthListener';
 
 export default function TabLayout() {
   return (
     <ProtectedRoute>
+      <AuthListener />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: '#007AFF',

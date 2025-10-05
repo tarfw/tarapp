@@ -10,17 +10,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+// This is a wrapper component that can use hooks and then pass the values to the provider
+function AuthProviderWithHooks({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Using the lower-level getAuth to fetch initial state
+    const initializeAuth = async () => {
+      try {
+        const auth = await db.getAuth();
+        setUser(auth?.user || null);
+      } catch (error) {
+        console.error('Error getting auth:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Subscribe to auth changes using the correct method
+    // Based on documentation, it should be subscribeAuth
     const unsubscribe = db.subscribeAuth((auth) => {
-      setUser(auth.user || null);
+      setUser(auth?.user || null);
       setIsLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const signInWithEmail = async (email: string) => {
@@ -49,6 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return <AuthProviderWithHooks>{children}</AuthProviderWithHooks>;
 }
 
 export function useAuth() {

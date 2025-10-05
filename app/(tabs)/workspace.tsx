@@ -65,7 +65,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>My Tasks</Text>
+      <Text style={styles.header}>Tasks</Text>
       
       <View style={styles.inputContainer}>
         <TextInput
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   inputContainer: {
     flexDirection: 'row',

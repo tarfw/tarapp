@@ -46,7 +46,6 @@ export default function TabLayout() {
           name="people"
           options={{
             title: 'People',
-            headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <FontAwesome name="at" size={size} color={color} />
             ),

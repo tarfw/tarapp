@@ -33,7 +33,12 @@ export default function PeopleScreen() {
   const user = db.useUser();
 
   return (
-    <>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "white",
+      }}
+    >
       <Stack.Screen 
         options={{ 
           headerRight: () => (
@@ -48,12 +53,12 @@ export default function PeopleScreen() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "white",
+          paddingTop: 50, // Add padding to account for header
         }}
       >
         <Text>People Tab</Text>
         <Text style={{ marginTop: 10 }}>Signed in as: {user?.email}</Text>
       </View>
-    </>
+    </View>
   );
 }

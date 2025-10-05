@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import db from '../../lib/db';
+import { useAuth } from '../../lib/auth';
 
 export default function VerifyCode() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { email } = useLocalSearchParams();
+  const { updateUser } = useAuth(); // Get the updateUser function to update context manually
 
   const handleVerifyCode = async () => {
     if (!code) {
@@ -17,10 +19,15 @@ export default function VerifyCode() {
 
     setLoading(true);
     try {
-      await db.auth.signInWithMagicCode({
+      const result = await db.auth.signInWithMagicCode({
         email: email as string,
         code,
       });
+      
+      // Manually update the auth context after successful login
+      // This ensures that when we navigate, the auth state is already updated
+      const auth = await db.getAuth();
+      updateUser(auth?.user || null);
       
       // Navigate to the workspace screen after successful login
       router.replace('/(tabs)/workspace');

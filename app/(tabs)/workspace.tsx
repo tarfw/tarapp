@@ -3,9 +3,12 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import db from '../../lib/db';
 import { id } from '@instantdb/react-native';
+import { useAuth } from '../../lib/auth';
+import { Stack } from 'expo-router';
 
 export default function HomeScreen() {
   const [newTask, setNewTask] = useState('');
+  const { user } = useAuth();
 
   // Get all tasks
   const { data: tasks, isLoading } = db.useQuery({ tasks: {} });
@@ -64,26 +67,37 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Tasks</Text>
-      
-      <View style={styles.inputContainer}>
-        <TextInput
-          value={newTask}
-          onChangeText={setNewTask}
-          style={styles.input}
-          placeholder="What needs to be done?"
-        />
-        <Button title="Add" onPress={addTask} />
-      </View>
-
-      <FlatList
-        data={tasks?.tasks || []}
-        renderItem={renderTask}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
+    <>
+      <Stack.Screen 
+        options={{ 
+          headerRight: () => (
+            <Text style={{ fontSize: 12, marginRight: 10 }}>
+              {user?.email || 'Guest'}
+            </Text>
+          ) 
+        }} 
       />
-    </SafeAreaView>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.header}>Tasks</Text>
+        
+        <View style={styles.inputContainer}>
+          <TextInput
+            value={newTask}
+            onChangeText={setNewTask}
+            style={styles.input}
+            placeholder="What needs to be done?"
+          />
+          <Button title="Add" onPress={addTask} />
+        </View>
+
+        <FlatList
+          data={tasks?.tasks || []}
+          renderItem={renderTask}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+        />
+      </SafeAreaView>
+    </>
   );
 }
 

@@ -19,6 +19,7 @@ function AuthProviderWithHooks({ children }: { children: ReactNode }) {
     // Using the lower-level getAuth to fetch initial state
     const initializeAuth = async () => {
       try {
+        // First get the initial auth state
         const auth = await db.getAuth();
         setUser(auth?.user || null);
       } catch (error) {
@@ -31,15 +32,30 @@ function AuthProviderWithHooks({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
-    // Subscribe to auth changes using the correct method
-    // Based on documentation, it should be subscribeAuth
-    const unsubscribe = db.subscribeAuth((auth) => {
-      setUser(auth?.user || null);
+    // For InstantDB React Native, use the standard auth subscription method
+    // Based on the documentation, it should be db.subscribeAuth
+    let unsubscribe: (() => void) | null = null;
+    
+    // Check if db.subscribeAuth exists before using it
+    if (typeof db.subscribeAuth === 'function') {
+      try {
+        unsubscribe = db.subscribeAuth((auth) => {
+          setUser(auth?.user || null);
+          // Only set loading to false after we get the first auth update
+          setIsLoading(false);
+        });
+      } catch (error) {
+        console.warn('Error setting up auth subscription:', error);
+        setIsLoading(false);
+      }
+    } else {
+      // Fallback: just set loading to false after getting initial state
       setIsLoading(false);
-    });
+    }
 
+    // Return cleanup function
     return () => {
-      if (unsubscribe) {
+      if (unsubscribe && typeof unsubscribe === 'function') {
         unsubscribe();
       }
     };
@@ -57,6 +73,7 @@ function AuthProviderWithHooks({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await db.auth.signOut();
+      setUser(null); // Clear local state on sign out
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

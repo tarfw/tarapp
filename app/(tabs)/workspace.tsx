@@ -3,12 +3,10 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import db from '../../lib/db';
 import { id } from '@instantdb/react-native';
-import { useAuth } from '../../lib/auth';
 import { Stack } from 'expo-router';
 
 export default function HomeScreen() {
   const [newTask, setNewTask] = useState('');
-  const { user } = useAuth();
 
   // Get all tasks
   const { data: tasks, isLoading } = db.useQuery({ tasks: {} });
@@ -65,6 +63,8 @@ export default function HomeScreen() {
       </View>
     </View>
   );
+
+  const user = db.useUser();
 
   return (
     <>

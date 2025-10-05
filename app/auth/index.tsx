@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../lib/auth';
+import db from '../../lib/db';
 
 export default function SignInWithEmail() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signInWithEmail } = useAuth();
   const router = useRouter();
 
   const handleSendCode = async () => {
@@ -17,7 +16,7 @@ export default function SignInWithEmail() {
 
     setLoading(true);
     try {
-      await signInWithEmail(email);
+      await db.auth.sendMagicCode({ email });
       // Navigate to the code verification screen
       router.push(`/auth/verify-code?email=${encodeURIComponent(email)}`);
     } catch (error: any) {

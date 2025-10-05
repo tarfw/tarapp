@@ -4,9 +4,10 @@ import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
 import { Stack } from 'expo-router';
+import db from '../../lib/db';
 
 export default function PeopleScreen() {
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -19,7 +20,7 @@ export default function PeopleScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await signOut();
+              await db.auth.signOut();
             } catch (error) {
               console.error('Error signing out:', error);
             }
@@ -28,6 +29,8 @@ export default function PeopleScreen() {
       ]
     );
   };
+
+  const user = db.useUser();
 
   return (
     <>
@@ -49,7 +52,7 @@ export default function PeopleScreen() {
         }}
       >
         <Text>People Tab</Text>
-        {user && <Text style={{ marginTop: 10 }}>Signed in as: {user.email}</Text>}
+        <Text style={{ marginTop: 10 }}>Signed in as: {user?.email}</Text>
       </View>
     </>
   );

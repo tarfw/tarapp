@@ -1,9 +1,9 @@
 import { Text, View } from "react-native";
-import { useAuth } from '../../lib/auth';
 import { Stack } from 'expo-router';
+import db from '../../lib/db';
 
 export default function AgentsScreen() {
-  const { user } = useAuth();
+  const user = db.useUser();
 
   return (
     <>

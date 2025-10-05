@@ -22,8 +22,8 @@ export default function VerifyCode() {
         code,
       });
       
-      // Navigate back to the main app after successful login
-      router.replace('/');
+      // Navigate to the workspace screen after successful login
+      router.replace('/(tabs)/workspace');
     } catch (error: any) {
       console.error('Error verifying magic code:', error);
       Alert.alert('Error', error.message || 'Failed to verify code');

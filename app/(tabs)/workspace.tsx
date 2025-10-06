@@ -3,7 +3,6 @@ import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import db from '../../lib/db';
 import { id } from '@instantdb/react-native';
-import { Stack } from 'expo-router';
 
 export default function HomeScreen() {
   const [newTask, setNewTask] = useState('');
@@ -64,6 +63,7 @@ export default function HomeScreen() {
     </View>
   );
 
+  // We know the user is authenticated since this is protected by ProtectedRoute
   const user = db.useUser();
 
   return (

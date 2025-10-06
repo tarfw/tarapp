@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import db from '../../lib/db';
+import AppLogo from '../../components/AppLogo';
 
 export default function VerifyCode() {
   const [code, setCode] = useState('');
@@ -22,8 +23,6 @@ export default function VerifyCode() {
         code,
       });
       
-      // The navigation will be handled by the ProtectedRoute component
-      // since InstantDB will automatically update the auth state
       // Navigate to the workspace screen after successful login
       router.replace('/(tabs)/workspace');
     } catch (error: any) {
@@ -47,73 +46,116 @@ export default function VerifyCode() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Verify Code</Text>
-      <Text style={styles.subtitle}>
-        Enter the magic code sent to {email}
-      </Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Enter code"
-        value={code}
-        onChangeText={setCode}
-        keyboardType="numeric"
-        autoCapitalize="none"
-        autoCorrect={false}
-        editable={!loading}
-        maxLength={6}
-      />
-      
-      <Button 
-        title={loading ? 'Verifying...' : 'Verify Code'} 
-        onPress={handleVerifyCode} 
-        disabled={loading}
-      />
-      
-      <View style={styles.resendContainer}>
-        <Text style={styles.resendText}>
-          Didn't receive a code?{' '}
-          <Text style={styles.resendLink} onPress={handleResendCode}>
-            Resend
-          </Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <AppLogo />
+        
+        <Text style={styles.title}>Enter the code</Text>
+        <Text style={styles.subtitle}>
+          Enter the magic code we sent to{'\n'}
+          <Text style={styles.emailText}>{email}</Text>
         </Text>
+        
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="123456"
+            value={code}
+            onChangeText={setCode}
+            keyboardType="numeric"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            maxLength={6}
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleVerifyCode} 
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Verifying...' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
+        
+        <View style={styles.resendContainer}>
+          <Text style={styles.resendText}>
+            Didn't receive a code?{' '}
+          </Text>
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendLink}>Resend</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    flex: 1,
     backgroundColor: 'white',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 80,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    color: '#000',
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
     color: '#666',
+    lineHeight: 24,
+  },
+  emailText: {
+    fontWeight: '600',
+    color: '#000',
+  },
+  inputContainer: {
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    backgroundColor: '#f9f9f9',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    marginBottom: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     fontSize: 16,
+    color: '#000',
     textAlign: 'center',
-    letterSpacing: 2,
+    letterSpacing: 4,
+  },
+  button: {
+    backgroundColor: '#000',
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   resendContainer: {
-    marginTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   resendText: {
@@ -121,7 +163,8 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   resendLink: {
-    color: '#007AFF',
-    fontWeight: 'bold',
+    color: '#000',
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });

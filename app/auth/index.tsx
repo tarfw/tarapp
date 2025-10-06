@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import db from '../../lib/db';
+import AppLogo from '../../components/AppLogo';
 
 export default function SignInWithEmail() {
   const [email, setEmail] = useState('');
@@ -28,55 +29,99 @@ export default function SignInWithEmail() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign In</Text>
-      <Text style={styles.subtitle}>Enter your email to receive a magic code</Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Email address"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        editable={!loading}
-      />
-      
-      <Button 
-        title={loading ? 'Sending...' : 'Send Magic Code'} 
-        onPress={handleSendCode} 
-        disabled={loading}
-      />
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <AppLogo />
+        <Text style={styles.appName}>tar</Text>
+        
+        <Text style={styles.title}>Continue to tar</Text>
+        <Text style={styles.subtitle}>Enter your email to sign in</Text>
+        
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleSendCode} 
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Sending...' : 'Continue'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
     backgroundColor: 'white',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 80,
+    paddingBottom: 40,
+  },
+  appName: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 50,
+    color: '#000',
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+    color: '#000',
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
     color: '#666',
+    lineHeight: 24,
+  },
+  inputContainer: {
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    backgroundColor: '#f9f9f9',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    marginBottom: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     fontSize: 16,
+    color: '#000',
+  },
+  button: {
+    backgroundColor: '#000',
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

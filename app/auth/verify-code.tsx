@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   button: {
-    backgroundColor: '#007AFF', // Blue color (already set)
+    backgroundColor: '#007AFF', // Blue color
     paddingVertical: 16,
     borderRadius: 6,
     alignItems: 'center',
@@ -177,50 +177,6 @@ const styles = StyleSheet.create({
   },
   resendLink: {
     color: '#007AFF', // Blue color
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  inputContainer: {
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    backgroundColor: '#f9f9f9',
-  },
-  input: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
-    letterSpacing: 4,
-  },
-  button: {
-    backgroundColor: '#000',
-    paddingVertical: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  buttonDisabled: {
-    backgroundColor: '#e0e0e0',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  resendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  resendText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  resendLink: {
-    color: '#000',
     fontWeight: '600',
     marginLeft: 4,
   },

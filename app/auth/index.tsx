@@ -107,34 +107,7 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   button: {
-    backgroundColor: '#007AFF', // Blue color (already set)
-    paddingVertical: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: '#e0e0e0',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  inputContainer: {
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    backgroundColor: '#f9f9f9',
-  },
-  input: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#000',
-  },
-  button: {
-    backgroundColor: '#000',
+    backgroundColor: '#007AFF', // Blue color
     paddingVertical: 16,
     borderRadius: 6,
     alignItems: 'center',

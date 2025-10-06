@@ -49,6 +49,7 @@ export default function VerifyCode() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.appName}>tar</Text>
+        <Text style={styles.appSubtitle}>Everything App</Text>
         <AppLogo style={styles.logoBelowTitle} />
         
         <Text style={styles.emailText}>
@@ -106,13 +107,21 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 48, // Larger font size for H1
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 60,
     color: '#000',
   },
+  appSubtitle: {
+    fontSize: 16, // H3 size
+    fontWeight: 'normal',
+    textAlign: 'center',
+    marginBottom: 10,
+    color: '#999', // Light grey color
+  },
   logoBelowTitle: {
+    justifyContent: 'center',
     marginTop: 20,
     marginBottom: 40,
   },
@@ -126,6 +135,50 @@ const styles = StyleSheet.create({
   emailBold: {
     fontWeight: '600',
     color: '#000',
+  },
+  inputContainer: {
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    backgroundColor: '#f9f9f9',
+  },
+  input: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'center',
+    letterSpacing: 4,
+  },
+  button: {
+    backgroundColor: '#007AFF', // Blue color
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resendText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  resendLink: {
+    color: '#007AFF', // Blue color
+    fontWeight: '600',
+    marginLeft: 4,
   },
   inputContainer: {
     marginBottom: 24,

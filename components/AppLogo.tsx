@@ -19,12 +19,13 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center', // Center the logo
     marginBottom: 20,
   },
   logoItem: {
     width: 24,
     height: 24,
-    marginRight: 8,
+    marginHorizontal: 4, // Added margin for better spacing
   },
   circle: {
     backgroundColor: 'red',
@@ -35,9 +36,10 @@ const styles = StyleSheet.create({
     borderRadius: 6, // Rounded corners for the square
   },
   atSymbolText: {
-    fontSize: 24,
+    fontSize: 32, // Increased size of @ symbol
     color: 'lightgrey',
     fontWeight: 'bold',
+    marginLeft: 4, // Added margin for spacing
   },
 });
 

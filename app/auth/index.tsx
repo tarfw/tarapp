@@ -32,6 +32,7 @@ export default function SignInWithEmail() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.appName}>tar</Text>
+        <Text style={styles.appSubtitle}>Everything App</Text>
         <AppLogo style={styles.logoBelowTitle} />
         
         <View style={styles.inputContainer}>
@@ -74,13 +75,21 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   appName: {
-    fontSize: 32,
+    fontSize: 48, // Larger font size for H1
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 60,
     color: '#000',
   },
+  appSubtitle: {
+    fontSize: 16, // H3 size
+    fontWeight: 'normal',
+    textAlign: 'center',
+    marginBottom: 10,
+    color: '#999', // Light grey color
+  },
   logoBelowTitle: {
+    justifyContent: 'center',
     marginTop: 20,
     marginBottom: 40,
   },
@@ -90,6 +99,26 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
     borderRadius: 6,
     backgroundColor: '#f9f9f9',
+  },
+  input: {
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: '#000',
+  },
+  button: {
+    backgroundColor: '#007AFF', // Blue color
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    backgroundColor: '#e0e0e0',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
   },
   inputContainer: {
     marginBottom: 24,

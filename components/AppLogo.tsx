@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   logoItem: {
     width: 24,
     height: 24,
-    marginHorizontal: 4, // Added margin for better spacing
+    marginHorizontal: 8, // Increased margin for even spacing
   },
   circle: {
     backgroundColor: 'red',
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     fontSize: 32, // Increased size of @ symbol
     color: 'lightgrey',
     fontWeight: 'bold',
-    marginLeft: 4, // Added margin for spacing
+    marginHorizontal: 8, // Added margin for even spacing
   },
 });
 

@@ -1,48 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Redirect, router } from 'expo-router';
+import { Redirect } from 'expo-router';
 import db from './db';
 
 // Component to protect routes that require authentication
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  useEffect(() => {
-    let isActive = true;
-    
-    const checkAuth = async () => {
-      try {
-        const auth = await db.getAuth();
-        if (isActive) {
-          setIsAuthenticated(!!auth.user);
-          setAuthChecked(true);
-        }
-      } catch (error) {
-        if (isActive) {
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
-      }
-    };
+  const { isLoading, user, error } = db.useAuth();
 
-    checkAuth();
-
-    // Subscribe to auth changes
-    const unsubscribe = db.subscribeAuth((auth) => {
-      if (isActive) {
-        setIsAuthenticated(!!auth?.user);
-        setAuthChecked(true);
-      }
-    });
-
-    return () => {
-      isActive = false;
-      if (unsubscribe) unsubscribe();
-    };
-  }, []);
-
-  if (!authChecked) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" />
@@ -50,7 +15,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (error) {
+    // In case of an error, redirect to auth
+    return <Redirect href="/auth" />;
+  }
+
+  if (!user) {
     return <Redirect href="/auth" />;
   }
 

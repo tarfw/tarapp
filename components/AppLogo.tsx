@@ -1,9 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 
-const AppLogo = () => {
+interface AppLogoProps {
+  style?: ViewStyle;
+}
+
+const AppLogo = ({ style }: AppLogoProps) => {
   return (
-    <View style={styles.logoContainer}>
+    <View style={[styles.logoContainer, style]}>
       <View style={[styles.logoItem, styles.circle]} />
       <View style={[styles.logoItem, styles.square]} />
       <Text style={styles.atSymbolText}>@</Text>

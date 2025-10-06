@@ -31,16 +31,13 @@ export default function SignInWithEmail() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <AppLogo />
         <Text style={styles.appName}>tar</Text>
-        
-        <Text style={styles.title}>Continue to tar</Text>
-        <Text style={styles.subtitle}>Enter your email to sign in</Text>
+        <AppLogo style={styles.logoBelowTitle} />
         
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Enter your email"
+            placeholder="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -80,22 +77,19 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 50,
+    marginTop: 40,
     color: '#000',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 12,
-    color: '#000',
+  logoBelowTitle: {
+    marginTop: 20,
+    marginBottom: 40,
   },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 32,
-    color: '#666',
-    lineHeight: 24,
+  inputContainer: {
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    backgroundColor: '#f9f9f9',
   },
   inputContainer: {
     marginBottom: 24,

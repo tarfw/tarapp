@@ -48,12 +48,12 @@ export default function VerifyCode() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <AppLogo />
+        <Text style={styles.appName}>tar</Text>
+        <AppLogo style={styles.logoBelowTitle} />
         
-        <Text style={styles.title}>Enter the code</Text>
-        <Text style={styles.subtitle}>
-          Enter the magic code we sent to{'\n'}
-          <Text style={styles.emailText}>{email}</Text>
+        <Text style={styles.emailText}>
+          Enter the code sent to{'\n'}
+          <Text style={styles.emailBold}>{email}</Text>
         </Text>
         
         <View style={styles.inputContainer}>
@@ -105,21 +105,25 @@ const styles = StyleSheet.create({
     paddingTop: 80,
     paddingBottom: 40,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
+  appName: {
+    fontSize: 32,
+    fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 12,
+    marginTop: 40,
     color: '#000',
   },
-  subtitle: {
+  logoBelowTitle: {
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  emailText: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
     color: '#666',
     lineHeight: 24,
   },
-  emailText: {
+  emailBold: {
     fontWeight: '600',
     color: '#000',
   },

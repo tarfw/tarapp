@@ -67,37 +67,29 @@ export default function HomeScreen() {
   const user = db.useUser();
 
   return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          headerRight: () => (
-            <Text style={{ fontSize: 12, marginRight: 10 }}>
-              {user?.email || 'Guest'}
-            </Text>
-          ) 
-        }} 
-      />
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerContainer}>
         <Text style={styles.header}>Tasks</Text>
-        
-        <View style={styles.inputContainer}>
-          <TextInput
-            value={newTask}
-            onChangeText={setNewTask}
-            style={styles.input}
-            placeholder="What needs to be done?"
-          />
-          <Button title="Add" onPress={addTask} />
-        </View>
-
-        <FlatList
-          data={tasks?.tasks || []}
-          renderItem={renderTask}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
+        <Text style={styles.userEmail}>{user?.email || 'Guest'}</Text>
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={newTask}
+          onChangeText={setNewTask}
+          style={styles.input}
+          placeholder="What needs to be done?"
         />
-      </SafeAreaView>
-    </>
+        <Button title="Add" onPress={addTask} />
+      </View>
+
+      <FlatList
+        data={tasks?.tasks || []}
+        renderItem={renderTask}
+        keyExtractor={(item) => item.id}
+        style={styles.list}
+      />
+    </SafeAreaView>
   );
 }
 
@@ -107,11 +99,20 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: 'white', // Changed to white background
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
     textAlign: 'left',
+  },
+  userEmail: {
+    fontSize: 12,
+    color: '#666',
   },
   inputContainer: {
     flexDirection: 'row',

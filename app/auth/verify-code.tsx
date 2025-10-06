@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import db from '../../lib/db';
 import AppLogo from '../../components/AppLogo';
@@ -77,9 +77,13 @@ export default function VerifyCode() {
           onPress={handleVerifyCode} 
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Verifying...' : 'Continue'}
-          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="white" />
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
         </TouchableOpacity>
         
         <View style={styles.resendContainer}>
@@ -174,6 +178,12 @@ const styles = StyleSheet.create({
   resendText: {
     fontSize: 14,
     color: '#666',
+  },
+  loadingContainer: {
+    width: '100%',
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   resendLink: {
     color: '#007AFF', // Blue color

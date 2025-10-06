@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import db from '../../lib/db';
 import AppLogo from '../../components/AppLogo';
@@ -54,9 +54,13 @@ export default function SignInWithEmail() {
           onPress={handleSendCode} 
           disabled={loading}
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Sending...' : 'Continue'}
-          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="white" />
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>Continue</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -119,5 +123,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '500',
+  },
+  loadingContainer: {
+    width: '100%',
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

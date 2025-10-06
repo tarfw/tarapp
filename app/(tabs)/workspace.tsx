@@ -7,10 +7,14 @@ import { id } from '@instantdb/react-native';
 export default function HomeScreen() {
   const [newTask, setNewTask] = useState('');
 
-  // Get all tasks
-  const { data: tasks, isLoading } = db.useQuery({ tasks: {} });
+  // Get all tasks - this hook should be consistent
+  const { data: tasks, isLoading: tasksLoading } = db.useQuery({ tasks: {} });
+  
+  // Get user info - this hook should be consistent
+  const user = db.useUser();
 
-  if (isLoading) {
+  // If tasks are loading, show loading state
+  if (tasksLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <Text>Loading...</Text>
@@ -62,9 +66,6 @@ export default function HomeScreen() {
       </View>
     </View>
   );
-
-  // We know the user is authenticated since this is protected by ProtectedRoute
-  const user = db.useUser();
 
   return (
     <SafeAreaView style={styles.container}>

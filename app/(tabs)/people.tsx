@@ -1,14 +1,10 @@
 import { Text, View } from "react-native";
-import { useAuth } from '../../lib/auth';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert } from 'react-native';
-import { Stack } from 'expo-router';
 import db from '../../lib/db';
 
 export default function PeopleScreen() {
-  const { signOut } = useAuth();
-
   const handleSignOut = () => {
     Alert.alert(
       'Sign Out',
@@ -36,29 +32,17 @@ export default function PeopleScreen() {
     <View
       style={{
         flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
         backgroundColor: "white",
       }}
     >
-      <Stack.Screen 
-        options={{ 
-          headerRight: () => (
-            <TouchableOpacity onPress={handleSignOut} style={{ marginRight: 10 }}>
-              <Ionicons name="log-out-outline" size={24} color="#007AFF" />
-            </TouchableOpacity>
-          ) 
-        }} 
-      />
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          paddingTop: 50, // Add padding to account for header
-        }}
-      >
-        <Text>People Tab</Text>
-        <Text style={{ marginTop: 10 }}>Signed in as: {user?.email}</Text>
-      </View>
+      <Text>People Tab</Text>
+      <Text style={{ marginTop: 10 }}>Signed in as: {user?.email}</Text>
+      <TouchableOpacity onPress={handleSignOut} style={{ marginTop: 20, padding: 10 }}>
+        <Ionicons name="log-out-outline" size={24} color="#007AFF" />
+        <Text style={{ color: '#007AFF', textAlign: 'center' }}>Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }

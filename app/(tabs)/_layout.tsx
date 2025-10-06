@@ -1,6 +1,39 @@
 import { Tabs } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { ProtectedRoute } from '../../lib/ProtectedRoute';
+import { TouchableOpacity } from 'react-native';
+import { Alert } from 'react-native';
+import db from '../../lib/db';
+
+// Sign out button component for the header
+const SignOutButton = () => {
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await db.auth.signOut();
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <TouchableOpacity onPress={handleSignOut} style={{ marginRight: 10 }}>
+      <Ionicons name="log-out-outline" size={24} color="#007AFF" />
+    </TouchableOpacity>
+  );
+};
 
 export default function TabLayout() {
   return (
@@ -46,6 +79,7 @@ export default function TabLayout() {
           name="people"
           options={{
             title: 'People',
+            headerRight: () => <SignOutButton />,
             tabBarIcon: ({ color, size }) => (
               <FontAwesome name="at" size={size} color={color} />
             ),

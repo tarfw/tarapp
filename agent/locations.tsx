@@ -4,96 +4,72 @@ import { useRouter } from 'expo-router';
 import { id } from '@instantdb/react-native';
 import db from '../lib/db';
 
-// Product type based on schema
-type Product = {
+// Location type based on schema
+type Location = {
   id: string;
-  img?: string;
-  medias?: string;
-  notes?: string;
-  status?: string;
-  title?: string;
-  type?: string;
-  vendor?: string;
-  items?: {
+  name?: string;
+  inventory?: {
     id: string;
-    sku?: string;
-    barcode?: string;
-    price?: number;
+    available?: number;
+    committed?: number;
+    incoming?: number;
   }[];
 };
 
-export default function ProductsAgent() {
+export default function LocationsAgent() {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-  const [title, setTitle] = useState('');
-  const [vendor, setVendor] = useState('');
-  const [type, setType] = useState('');
-  const [status, setStatus] = useState('');
-  const [notes, setNotes] = useState('');
-  const [img, setImg] = useState('');
-  const [medias, setMedias] = useState('');
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  const [name, setName] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [locationToDelete, setLocationToDelete] = useState<string | null>(null);
 
-  // Query products from the database with their items
+  // Query locations from the database with their associated inventory
   const { data, isLoading, error } = db.useQuery({ 
-    products: {
-      items: {},
+    locations: {
+      inventory: {},
     }
   });
 
   useEffect(() => {
-    if (data?.products) {
-      setProducts(data.products);
+    if (data?.locations) {
+      setLocations(data.locations);
     }
   }, [data]);
 
-  const handleCreateProduct = () => {
-    if (!title.trim()) {
-      Alert.alert('Error', 'Title is required');
+  const handleCreateLocation = () => {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Name is required');
       return;
     }
 
-    const newProduct = {
-      title: title.trim(),
-      vendor: vendor.trim(),
-      type: type.trim(),
-      status: status.trim(),
-      notes: notes.trim(),
-      img: img.trim(),
-      medias: medias.trim(),
+    const newLocation = {
+      name: name.trim(),
     };
 
     db.transact([
-      db.tx.products[id()].create(newProduct)
+      db.tx.locations[id()].create(newLocation)
     ]);
 
     resetForm();
     setShowForm(false);
   };
 
-  const handleUpdateProduct = () => {
-    if (!currentProduct || !title.trim()) {
-      Alert.alert('Error', 'Title is required');
+  const handleUpdateLocation = () => {
+    if (!currentLocation || !name.trim()) {
+      Alert.alert('Error', 'Name is required');
       return;
     }
 
-    const updatedProduct = {
-      id: currentProduct.id,
-      title: title.trim(),
-      vendor: vendor.trim(),
-      type: type.trim(),
-      status: status.trim(),
-      notes: notes.trim(),
-      img: img.trim(),
-      medias: medias.trim(),
+    const updatedLocation = {
+      id: currentLocation.id,
+      name: name.trim(),
     };
 
     db.transact([
-      db.tx.products[currentProduct.id].update(updatedProduct)
+      db.tx.locations[currentLocation.id].update(updatedLocation)
     ]);
 
     resetForm();
@@ -101,34 +77,28 @@ export default function ProductsAgent() {
   };
 
   const showDeleteConfirmation = (id: string) => {
-    setProductToDelete(id);
+    setLocationToDelete(id);
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteProduct = () => {
-    if (productToDelete) {
+  const handleDeleteLocation = () => {
+    if (locationToDelete) {
       db.transact([
-        db.tx.products[productToDelete].delete()
+        db.tx.locations[locationToDelete].delete()
       ]);
       setShowDeleteConfirm(false);
-      setProductToDelete(null);
+      setLocationToDelete(null);
     }
   };
 
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
-    setProductToDelete(null);
+    setLocationToDelete(null);
   };
 
   const resetForm = () => {
-    setTitle('');
-    setVendor('');
-    setType('');
-    setStatus('');
-    setNotes('');
-    setImg('');
-    setMedias('');
-    setCurrentProduct(null);
+    setName('');
+    setCurrentLocation(null);
     setIsEditing(false);
   };
 
@@ -143,37 +113,31 @@ export default function ProductsAgent() {
     resetForm();
   };
 
-  const openEditForm = (product: Product) => {
-    setCurrentProduct(product);
-    setTitle(product.title || '');
-    setVendor(product.vendor || '');
-    setType(product.type || '');
-    setStatus(product.status || '');
-    setNotes(product.notes || '');
-    setImg(product.img || '');
-    setMedias(product.medias || '');
+  const openEditForm = (location: Location) => {
+    setCurrentLocation(location);
+    setName(location.name || '');
     setIsEditing(true);
     setShowForm(true);
   };
 
-  const navigateToItems = (productId: string) => {
-    router.push(`/agent/items?productId=${productId}`);
+  const navigateToInventory = (locationId: string) => {
+    router.push(`/agent/inventory?locationId=${locationId}`);
   };
 
-  const renderItem = ({ item }: { item: Product }) => (
+  const renderItem = ({ item }: { item: Location }) => (
     <TouchableOpacity 
       style={styles.listItem}
       onPress={() => openEditForm(item)}
       onLongPress={() => showDeleteConfirmation(item.id)}
     >
-      <View style={styles.productHeader}>
-        <Text style={styles.listItemTitle}>{item.title || 'Untitled Product'}</Text>
+      <View style={styles.locationHeader}>
+        <Text style={styles.listItemTitle}>{item.name || 'Untitled Location'}</Text>
         <TouchableOpacity 
-          onPress={() => navigateToItems(item.id)}
-          style={styles.itemsCountContainer}
+          onPress={() => navigateToInventory(item.id)}
+          style={styles.inventoryCountContainer}
         >
-          <Text style={styles.itemsCount}>
-            {item.items?.length || 0}
+          <Text style={styles.inventoryCount}>
+            {item.inventory?.length || 0}
           </Text>
         </TouchableOpacity>
       </View>
@@ -183,7 +147,7 @@ export default function ProductsAgent() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loading}>Loading products...</Text>
+        <Text style={styles.loading}>Loading locations...</Text>
       </View>
     );
   }
@@ -204,72 +168,22 @@ export default function ProductsAgent() {
             <Text style={styles.cancelButton}>Cancel</Text>
           </TouchableOpacity>
           <Text style={styles.formTitle}>
-            {isEditing ? 'Edit Product' : 'Create New Product'}
+            {isEditing ? 'Edit Location' : 'Create New Location'}
           </Text>
           <TouchableOpacity
-            onPress={isEditing ? handleUpdateProduct : handleCreateProduct}
+            onPress={isEditing ? handleUpdateLocation : handleCreateLocation}
           >
             <Text style={styles.saveButton}>Save</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.formContent}>
-          <Text style={styles.label}>Title *</Text>
+          <Text style={styles.label}>Name *</Text>
           <TextInput
             style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Enter product title"
-          />
-
-          <Text style={styles.label}>Vendor</Text>
-          <TextInput
-            style={styles.input}
-            value={vendor}
-            onChangeText={setVendor}
-            placeholder="Enter vendor name"
-          />
-
-          <Text style={styles.label}>Type</Text>
-          <TextInput
-            style={styles.input}
-            value={type}
-            onChangeText={setType}
-            placeholder="Enter product type"
-          />
-
-          <Text style={styles.label}>Status</Text>
-          <TextInput
-            style={styles.input}
-            value={status}
-            onChangeText={setStatus}
-            placeholder="Enter product status"
-          />
-
-          <Text style={styles.label}>Image URL</Text>
-          <TextInput
-            style={styles.input}
-            value={img}
-            onChangeText={setImg}
-            placeholder="Enter image URL"
-          />
-
-          <Text style={styles.label}>Media URL</Text>
-          <TextInput
-            style={styles.input}
-            value={medias}
-            onChangeText={setMedias}
-            placeholder="Enter media URL"
-          />
-
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Enter product notes"
-            multiline
-            textAlignVertical="top"
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter location name"
           />
         </ScrollView>
       </View>
@@ -280,20 +194,20 @@ export default function ProductsAgent() {
     <>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Products</Text>
+          <Text style={styles.headerTitle}>Locations</Text>
           <TouchableOpacity onPress={openCreateForm}>
             <Text style={styles.addText}>Add</Text>
           </TouchableOpacity>
         </View>
 
         <FlatList
-          data={products}
+          data={locations}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No products found</Text>
+              <Text style={styles.emptyStateText}>No locations found</Text>
             </View>
           }
         />
@@ -308,7 +222,7 @@ export default function ProductsAgent() {
               <TouchableOpacity onPress={cancelDelete}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleDeleteProduct}>
+              <TouchableOpacity onPress={handleDeleteLocation}>
                 <Text style={styles.deleteText}>Confirm to delete</Text>
               </TouchableOpacity>
             </View>
@@ -412,7 +326,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     backgroundColor: 'white',
   },
-  productHeader: {
+  locationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -423,12 +337,7 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
-  itemsCount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  itemsCountContainer: {
+  inventoryCountContainer: {
     backgroundColor: '#f0f0f0',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -437,6 +346,11 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  inventoryCount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
   },
   label: {
     fontSize: 16,
@@ -452,10 +366,6 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
   },
   formContainer: {
     flex: 1,

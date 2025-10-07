@@ -46,7 +46,11 @@ export default function ItemsAgent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
-  // Query items for the specific product and product details
+  // Query for locations and items for the specific product and product details
+  const { data: locationData } = db.useQuery({ 
+    locations: {}
+  });
+
   const { data, isLoading, error } = db.useQuery({
     items: {
       $: {
@@ -73,9 +77,24 @@ export default function ItemsAgent() {
     }
   }, [data]);
 
+  // Query for locations to find default location
+  const { data: locationsData } = db.useQuery({ 
+    locations: {}
+  });
+
   const handleCreateItem = () => {
     if (!sku.trim()) {
       Alert.alert('Error', 'SKU is required');
+      return;
+    }
+
+    // Get the first available location or use a default placeholder
+    const defaultLocationId = locationData?.locations && locationData.locations.length > 0 
+      ? locationData.locations[0].id 
+      : null;
+
+    if (!defaultLocationId) {
+      Alert.alert('Error', 'Please create at least one location before creating items.');
       return;
     }
 
@@ -90,8 +109,21 @@ export default function ItemsAgent() {
       product: productId as string,
     };
 
+    const itemId = id();
+    const inventoryId = id();
+    const newInventory = {
+      id: inventoryId,
+      available: 0,
+      committed: 0,
+      incoming: 0,
+      item: itemId,
+      locations: defaultLocationId,
+    };
+
+    // Create item and inventory in the same transaction
     db.transact([
-      db.tx.items[id()].create(newItem)
+      db.tx.items[itemId].create(newItem),
+      db.tx.inventory[inventoryId].create(newInventory)
     ]);
 
     resetForm();

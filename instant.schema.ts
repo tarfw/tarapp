@@ -166,6 +166,18 @@ const _schema = i.schema({
         label: "inventory",
       },
     },
+    inventoryLocations: {
+      forward: {
+        on: "inventory",
+        has: "many",
+        label: "locations",
+      },
+      reverse: {
+        on: "locations",
+        has: "one",
+        label: "inventory",
+      },
+    },
     itemsProduct: {
       forward: {
         on: "items",

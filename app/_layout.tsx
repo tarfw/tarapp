@@ -14,8 +14,7 @@ export default function RootLayout() {
             name="agent/items" 
             options={{ 
               headerShown: false,
-              title: 'Items',
-              presentation: 'modal'
+              title: 'Items'
             }} 
           />
         </Stack>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { id } from '@instantdb/react-native';
 import db from '../lib/db';
 
@@ -10,84 +11,91 @@ type Inventory = {
   available?: number;
   committed?: number;
   incoming?: number;
-  updatedat?: Date;
+  'item-id'?: string;
   item?: {
     id: string;
     sku?: string;
     barcode?: string;
     price?: number;
     product?: {
-      id: string;
       title?: string;
     };
   };
   locations?: {
     id: string;
     name?: string;
-  } | {
-    id: string;
-    name?: string;
-  }[];
+  };
+};
+
+// Item type for reference
+type Item = {
+  id: string;
+  barcode?: string;
+  cost?: number;
+  op1?: string;
+  op2?: string;
+  op3?: string;
+  price?: number;
+  sku?: string;
 };
 
 export default function InventoryAgent() {
   const router = useRouter();
-  const [inventoryItems, setInventoryItems] = useState<Inventory[]>([]);
+  const { itemId } = useLocalSearchParams();
+  const [inventories, setInventories] = useState<Inventory[]>([]);
+  const [itemInfo, setItemInfo] = useState<Item | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentInventory, setCurrentInventory] = useState<Inventory | null>(null);
   const [available, setAvailable] = useState('');
   const [committed, setCommitted] = useState('');
   const [incoming, setIncoming] = useState('');
-  const [selectedItem, setSelectedItem] = useState<string>('');
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [inventoryToDelete, setInventoryToDelete] = useState<string | null>(null);
 
-  // Query inventory from the database with their related items, products, and locations
-  const { data, isLoading, error } = db.useQuery({ 
+  // Get all inventory for the specific item and related data
+  const { data, isLoading, error } = db.useQuery({
     inventory: {
+      $: {
+        where: itemId ? { 'item.id': itemId } : { id: 'non-existent-id' }, // Only get inventory for this item
+      },
       item: {
         product: {},
       },
       locations: {},
-    }
-  });
-
-  // Get all items for selection
-  const { data: itemsData } = db.useQuery({ 
-    items: {}
-  });
-
-  // Get all locations for selection
-  const { data: locationsData } = db.useQuery({ 
-    locations: {}
+    },
+    items: {
+      $: {
+        where: { id: itemId },
+      },
+      product: {},
+    },
   });
 
   useEffect(() => {
     if (data?.inventory) {
-      setInventoryItems(data.inventory);
+      setInventories(data.inventory);
+    }
+    if (data?.items && data.items.length > 0) {
+      setItemInfo(data.items[0]);
     }
   }, [data]);
 
   const handleCreateInventory = () => {
-    if (!selectedItem || !selectedLocation) {
-      Alert.alert('Error', 'Item and Location are required');
+    if (!itemId) {
+      Alert.alert('Error', 'Item ID is required');
       return;
     }
 
-    const inventoryId = id();
     const newInventory = {
-      id: inventoryId,
       available: available.trim() ? parseInt(available.trim()) : 0,
       committed: committed.trim() ? parseInt(committed.trim()) : 0,
       incoming: incoming.trim() ? parseInt(incoming.trim()) : 0,
     };
 
     db.transact([
-      db.tx.inventory[inventoryId].create(newInventory),
-      db.tx.inventory[inventoryId].link({ item: selectedItem }),
-      db.tx.inventory[inventoryId].link({ locations: selectedLocation }),
+      db.tx.inventory[id()].create(newInventory),
+      db.tx.inventory[id()].link({ item: itemId }),
     ]);
 
     resetForm();
@@ -95,21 +103,20 @@ export default function InventoryAgent() {
   };
 
   const handleUpdateInventory = () => {
-    if (!currentInventory || !selectedItem || !selectedLocation) {
-      Alert.alert('Error', 'Item and Location are required');
+    if (!currentInventory || !itemId) {
+      Alert.alert('Error', 'Inventory and Item ID are required');
       return;
     }
 
     const updatedInventory = {
-      available: available.trim() ? parseInt(available.trim()) : 0,
-      committed: committed.trim() ? parseInt(committed.trim()) : 0,
-      incoming: incoming.trim() ? parseInt(incoming.trim()) : 0,
+      id: currentInventory.id,
+      available: available.trim() ? parseInt(available.trim()) : currentInventory.available || 0,
+      committed: committed.trim() ? parseInt(committed.trim()) : currentInventory.committed || 0,
+      incoming: incoming.trim() ? parseInt(incoming.trim()) : currentInventory.incoming || 0,
     };
 
     db.transact([
-      db.tx.inventory[currentInventory.id].update(updatedInventory),
-      db.tx.inventory[currentInventory.id].relink({ item: selectedItem }),
-      db.tx.inventory[currentInventory.id].relink({ locations: selectedLocation }),
+      db.tx.inventory[currentInventory.id].update(updatedInventory)
     ]);
 
     resetForm();
@@ -140,8 +147,6 @@ export default function InventoryAgent() {
     setAvailable('');
     setCommitted('');
     setIncoming('');
-    setSelectedItem('');
-    setSelectedLocation('');
     setCurrentInventory(null);
     setIsEditing(false);
   };
@@ -159,21 +164,14 @@ export default function InventoryAgent() {
 
   const openEditForm = (inventory: Inventory) => {
     setCurrentInventory(inventory);
-    setAvailable(inventory.available?.toString() || '');
-    setCommitted(inventory.committed?.toString() || '');
-    setIncoming(inventory.incoming?.toString() || '');
-    setSelectedItem(inventory.item?.id || '');
-    // Handle both array and object access for locations
-    setSelectedLocation(
-      Array.isArray(inventory.locations) 
-        ? (inventory.locations[0]?.id || '') 
-        : (inventory.locations?.id || '')
-    );
+    setAvailable((inventory.available || 0).toString());
+    setCommitted((inventory.committed || 0).toString());
+    setIncoming((inventory.incoming || 0).toString());
     setIsEditing(true);
     setShowForm(true);
   };
 
-  const renderItem = ({ item }: { item: Inventory }) => (
+  const renderInventory = ({ item }: { item: Inventory }) => (
     <TouchableOpacity 
       style={styles.listItem}
       onPress={() => openEditForm(item)}
@@ -181,20 +179,9 @@ export default function InventoryAgent() {
     >
       <View style={styles.inventoryHeader}>
         <Text style={styles.listItemTitle}>
-          {item.item?.product?.title || item.item?.sku || 'Untitled Item'} at {
-            Array.isArray(item.locations) 
-              ? (item.locations[0]?.name || 'Unknown Location') 
-              : (item.locations?.name || 'Unknown Location')
-          }
+          {item.locations?.name || item.locations?.id || 'Location Unknown'}
         </Text>
-        <TouchableOpacity 
-          style={styles.inventoryCountContainer}
-          onPress={() => openEditForm(item)}
-        >
-          <Text style={styles.inventoryCount}>
-            {item.available || 0}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.inventoryCount}>{item.available || 0}</Text>
       </View>
       <View style={styles.inventoryDetails}>
         <Text style={styles.detailText}>Available: {item.available || 0}</Text>
@@ -238,38 +225,6 @@ export default function InventoryAgent() {
         </View>
 
         <ScrollView contentContainerStyle={styles.formContent}>
-          <Text style={styles.label}>Item</Text>
-          <View style={styles.selectorContainer}>
-            {itemsData?.items && itemsData.items.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[
-                  styles.selectorOption,
-                  selectedItem === item.id && styles.selectedOption
-                ]}
-                onPress={() => setSelectedItem(item.id)}
-              >
-                <Text style={styles.selectorOptionText}>{item.sku || item.id}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Location</Text>
-          <View style={styles.selectorContainer}>
-            {locationsData?.locations && locationsData.locations.map((location) => (
-              <TouchableOpacity
-                key={location.id}
-                style={[
-                  styles.selectorOption,
-                  selectedLocation === location.id && styles.selectedOption
-                ]}
-                onPress={() => setSelectedLocation(location.id)}
-              >
-                <Text style={styles.selectorOptionText}>{location.name || location.id}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
           <Text style={styles.label}>Available</Text>
           <TextInput
             style={styles.input}
@@ -302,27 +257,25 @@ export default function InventoryAgent() {
   }
 
   return (
-    <>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Inventory</Text>
-          <TouchableOpacity onPress={openCreateForm}>
-            <Text style={styles.addText}>Add</Text>
-          </TouchableOpacity>
-        </View>
-
-        <FlatList
-          data={inventoryItems}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No inventory found</Text>
-            </View>
-          }
-        />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Inventory for {itemInfo?.sku || 'Item'}</Text>
+        <TouchableOpacity onPress={openCreateForm}>
+          <Text style={styles.addText}>Add</Text>
+        </TouchableOpacity>
       </View>
+
+      <FlatList
+        data={inventories}
+        renderItem={renderInventory}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No inventory found</Text>
+          </View>
+        }
+      />
 
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
@@ -340,7 +293,7 @@ export default function InventoryAgent() {
           </View>
         </View>
       )}
-    </>
+    </SafeAreaView>
   );
 }
 
@@ -448,16 +401,6 @@ const styles = StyleSheet.create({
     color: '#333',
     flex: 1,
   },
-  inventoryCountContainer: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   inventoryCount: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -486,29 +429,6 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
-  },
-  selectorContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
-  },
-  selectorOption: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  selectedOption: {
-    backgroundColor: '#007AFF',
-  },
-  selectorOptionText: {
-    color: '#333',
-    fontSize: 14,
-  },
-  selectedOptionText: {
-    color: 'white',
   },
   formContainer: {
     flex: 1,

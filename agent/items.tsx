@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { id } from '@instantdb/react-native';
 import db from '../lib/db';
+import InventoryModal from '../components/InventoryModal';
 
 // Item type based on schema
 type Item = {
@@ -21,6 +22,12 @@ type Item = {
 type Product = {
   id: string;
   title?: string;
+};
+
+// Location type
+type Location = {
+  id: string;
+  name?: string;
 };
 
 export default function ItemsAgent() {
@@ -41,10 +48,6 @@ export default function ItemsAgent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
-  const { data: locationsData } = db.useQuery({ 
-    locations: {}
-  });
-
   const { data, isLoading, error } = db.useQuery({
     items: {
       $: {
@@ -60,6 +63,7 @@ export default function ItemsAgent() {
         },
       },
     },
+    locations: {}
   });
 
   useEffect(() => {
@@ -71,24 +75,27 @@ export default function ItemsAgent() {
     }
   }, [data]);
 
-  // Query for locations to find default location
-  const { data: locationsData } = db.useQuery({ 
-    locations: {}
+  const locationsData = data?.locations || [];
+
+  // Query for inventory items for the current item specifically
+  const inventoryQuery = db.useQuery({
+    inventory: {
+      $: {
+        where: currentItem?.id ? { 'item.id': currentItem.id } : { id: 'non-existent-id' },
+      },
+      locations: {},
+    }
   });
+  
+  const inventoryItems = inventoryQuery.data?.inventory || [];
+  
+  // State for inventory modal
+  const [inventoryModalVisible, setInventoryModalVisible] = useState(false);
+  const [selectedInventoryToEdit, setSelectedInventoryToEdit] = useState<any>(null);
 
   const handleCreateItem = () => {
     if (!sku.trim()) {
       Alert.alert('Error', 'SKU is required');
-      return;
-    }
-
-    // Get the first available location or use a default placeholder
-    const defaultLocationId = locationsData?.locations && locationsData.locations.length > 0 
-      ? locationsData.locations[0].id 
-      : null;
-
-    if (!defaultLocationId) {
-      Alert.alert('Error', 'Please create at least one location before creating items.');
       return;
     }
 
@@ -104,20 +111,8 @@ export default function ItemsAgent() {
     };
 
     const itemId = id();
-    const inventoryId = id();
-    const newInventory = {
-      id: inventoryId,
-      available: 0,
-      committed: 0,
-      incoming: 0,
-      item: itemId,
-      locations: defaultLocationId,
-    };
-
-    // Create item and inventory in the same transaction
     db.transact([
       db.tx.items[itemId].create(newItem),
-      db.tx.inventory[inventoryId].create(newInventory)
     ]);
 
     resetForm();
@@ -167,6 +162,33 @@ export default function ItemsAgent() {
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
     setItemToDelete(null);
+  };
+
+  // Function to delete inventory
+  const handleDeleteInventory = (inventoryId: string) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this inventory?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            db.transact([
+              db.tx.inventory[inventoryId].delete(),
+            ]);
+          },
+        },
+      ]
+    );
+  };
+
+  // Function to edit inventory
+  const handleEditInventory = (inventory: any) => {
+    // Open the modal in edit mode
+    setSelectedInventoryToEdit(inventory);
+    setInventoryModalVisible(true);
   };
 
   const resetForm = () => {
@@ -266,6 +288,7 @@ export default function ItemsAgent() {
             value={sku}
             onChangeText={setSku}
             placeholder="Enter item SKU"
+            autoFocus={true}
           />
 
           <Text style={styles.label}>Barcode</Text>
@@ -317,7 +340,77 @@ export default function ItemsAgent() {
             onChangeText={setOp3}
             placeholder="Enter option 3"
           />
+
+          {/* Inventory Management Section - Only shown when editing */}
+          {isEditing && (
+            <View style={styles.inventorySection}>
+              <View style={styles.inventoryHeader}>
+                <Text style={styles.inventoryTitle}>Inventory Locations</Text>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() => {
+                    if (currentItem?.id) {
+                      setInventoryModalVisible(true);
+                    } else {
+                      Alert.alert('Error', 'Please select an item first');
+                    }
+                  }}
+                >
+                  <Text style={styles.addButtonText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Existing Inventory List */}
+              {inventoryItems && inventoryItems.length > 0 ? (
+                <View style={styles.inventoryList}>
+                  {inventoryItems.map((inventory) => (
+                    <TouchableOpacity 
+                      key={inventory.id} 
+                      style={styles.inventoryListItem}
+                      onPress={() => handleEditInventory(inventory)}
+                      onLongPress={() => handleDeleteInventory(inventory.id)}
+                    >
+                      <View style={styles.inventoryItemHeader}>
+                        <Text style={styles.inventoryItemLocation}>
+                          {Array.isArray(inventory.locations) 
+                            ? (inventory.locations[0]?.name || 'Unknown Location') 
+                            : (inventory.locations?.name || inventory.locations?.id || 'Unknown Location')}
+                        </Text>
+                        <Text style={styles.inventoryValueText}>{inventory.available || 0}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noInventoryContainer}>
+                  <Text style={styles.noInventoryText}>No inventory added for this item</Text>
+                </View>
+              )}
+            </View>
+          )}
         </ScrollView>
+
+        {/* Inventory Modal */}
+        {inventoryModalVisible && (
+          <InventoryModal
+            visible={inventoryModalVisible}
+            onClose={() => {
+              setInventoryModalVisible(false);
+              setSelectedInventoryToEdit(null);
+            }}
+            itemId={currentItem?.id || ''}
+            locations={locationsData || []}
+            inventoryToEdit={selectedInventoryToEdit}
+            onInventoryAdded={() => {
+              // The query will automatically update due to reactivity
+              console.log('Inventory added, query should update automatically');
+            }}
+            onInventoryUpdated={() => {
+              // The query will automatically update due to reactivity
+              console.log('Inventory updated, query should update automatically');
+            }}
+          />
+        )}
       </View>
     );
   }
@@ -391,8 +484,8 @@ const styles = StyleSheet.create({
   },
   headerContentLeft: {
     flex: 1,
-    marginLeft: 10, // Add some left margin
-    justifyContent: 'center', // Center the title/subtitle vertically
+    marginLeft: 10,
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 20,
@@ -422,19 +515,6 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
     color: '#e74c3c',
-  },
-  addButton: {
-    backgroundColor: 'white',
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  addButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   confirmationOverlay: {
     position: 'absolute',
@@ -556,5 +636,72 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  inventorySection: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  inventoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  inventoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  addButton: {
+    backgroundColor: 'white',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#007AFF',
+  },
+  addButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  inventoryList: {
+    marginTop: 15,
+  },
+  inventoryListItem: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: 'white',
+  },
+  inventoryItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  inventoryItemLocation: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  inventoryValueText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  noInventoryContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
+  },
+  noInventoryText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });

@@ -41,17 +41,20 @@ export default function InventoryAgent() {
   const [incoming, setIncoming] = useState('');
   const [selectedItem, setSelectedItem] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [selectedFilterLocation, setSelectedFilterLocation] = useState<string>('all');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [inventoryToDelete, setInventoryToDelete] = useState<string | null>(null);
 
   // Query inventory from the database with their related items, products, and locations
+  // Group by location for easier filtering
   const { data, isLoading, error } = db.useQuery({ 
     inventory: {
       item: {
         product: {},
       },
       locations: {},
-    }
+    },
+    locations: {}
   });
 
   // Get all items for selection
@@ -66,9 +69,20 @@ export default function InventoryAgent() {
 
   useEffect(() => {
     if (data?.inventory) {
-      setInventoryItems(data.inventory);
+      // Apply location filter if not 'all'
+      if (selectedFilterLocation === 'all') {
+        setInventoryItems(data.inventory);
+      } else {
+        const filtered = data.inventory.filter(inventory => {
+          const locationId = Array.isArray(inventory.locations) 
+            ? inventory.locations[0]?.id 
+            : inventory.locations?.id;
+          return locationId === selectedFilterLocation;
+        });
+        setInventoryItems(filtered);
+      }
     }
-  }, [data]);
+  }, [data, selectedFilterLocation]);
 
   const handleCreateInventory = () => {
     if (!selectedItem || !selectedLocation) {
@@ -181,11 +195,7 @@ export default function InventoryAgent() {
     >
       <View style={styles.inventoryHeader}>
         <Text style={styles.listItemTitle}>
-          {item.item?.product?.title || item.item?.sku || 'Untitled Item'} at {
-            Array.isArray(item.locations) 
-              ? (item.locations[0]?.name || 'Unknown Location') 
-              : (item.locations?.name || 'Unknown Location')
-          }
+          {item.item?.product?.title || item.item?.sku || 'Untitled Item'}
         </Text>
         <TouchableOpacity 
           style={styles.inventoryCountContainer}
@@ -195,11 +205,6 @@ export default function InventoryAgent() {
             {item.available || 0}
           </Text>
         </TouchableOpacity>
-      </View>
-      <View style={styles.inventoryDetails}>
-        <Text style={styles.detailText}>Available: {item.available || 0}</Text>
-        <Text style={styles.detailText}>Committed: {item.committed || 0}</Text>
-        <Text style={styles.detailText}>Incoming: {item.incoming || 0}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -309,6 +314,45 @@ export default function InventoryAgent() {
           <TouchableOpacity onPress={openCreateForm}>
             <Text style={styles.addText}>Add</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Location Filter */}
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterLabel}>Filter by Location:</Text>
+          <View style={styles.selectorContainer}>
+            <TouchableOpacity
+              key="all"
+              style={[
+                styles.selectorOption,
+                selectedFilterLocation === 'all' && styles.selectedOption
+              ]}
+              onPress={() => setSelectedFilterLocation('all')}
+            >
+              <Text style={[
+                styles.selectorOptionText,
+                selectedFilterLocation === 'all' && styles.selectedOptionText
+              ]}>
+                All
+              </Text>
+            </TouchableOpacity>
+            {data?.locations && data.locations.map((location) => (
+              <TouchableOpacity
+                key={location.id}
+                style={[
+                  styles.selectorOption,
+                  selectedFilterLocation === location.id && styles.selectedOption
+                ]}
+                onPress={() => setSelectedFilterLocation(location.id)}
+              >
+                <Text style={[
+                  styles.selectorOptionText,
+                  selectedFilterLocation === location.id && styles.selectedOptionText
+                ]}>
+                  {location.name || location.id}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <FlatList
@@ -486,6 +530,18 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#f9f9f9',
+  },
+  filterContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
   },
   selectorContainer: {
     flexDirection: 'row',

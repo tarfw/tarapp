@@ -174,7 +174,7 @@ const _schema = i.schema({
       },
       reverse: {
         on: "locations",
-        has: "one",
+        has: "many",
         label: "inventory",
       },
     },
@@ -236,6 +236,18 @@ const _schema = i.schema({
         on: "orders",
         has: "many",
         label: "payments",
+      },
+    },
+    productsStore: {
+      forward: {
+        on: "products",
+        has: "many",
+        label: "store",
+      },
+      reverse: {
+        on: "stores",
+        has: "many",
+        label: "products",
       },
     },
     storesAddress: {

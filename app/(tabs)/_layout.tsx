@@ -1,20 +1,25 @@
-import { Tabs } from 'expo-router';
+import React from 'react';
+import { Tabs, Redirect } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
-import { Alert } from 'react-native';
+import { View, ActivityIndicator, Text } from 'react-native';
 import db from '../../lib/db';
-import { View, ActivityIndicator } from 'react-native';
-import { Redirect } from 'expo-router';
 
 function ProtectedTabs() {
   const { isLoading, user, error } = db.useAuth();
+  console.log('Tabs auth state:', { isLoading, user: user ? 'exists' : null, error });
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={{ marginTop: 16, color: '#6b7280' }}>Loading...</Text>
       </View>
     );
+  }
+
+  if (error) {
+    console.error('Auth error:', error);
+    return <Redirect href="/auth" />;
   }
 
   if (!user) {
@@ -63,7 +68,7 @@ function ProtectedTabs() {
         name="people"
         options={{
           title: 'People',
-          headerRight: () => <SignOutButton />,
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesome name="at" size={size} color={color} />
           ),
@@ -72,36 +77,6 @@ function ProtectedTabs() {
     </Tabs>
   );
 }
-
-// Sign out button component for the header
-const SignOutButton = () => {
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await db.auth.signOut();
-            } catch (error) {
-              console.error('Error signing out:', error);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  return (
-    <TouchableOpacity onPress={handleSignOut} style={{ marginRight: 10 }}>
-      <Ionicons name="log-out-outline" size={24} color="#007AFF" />
-    </TouchableOpacity>
-  );
-};
 
 export default function TabLayout() {
   return <ProtectedTabs />;

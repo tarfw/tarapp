@@ -9,6 +9,7 @@ import ProductsAgent from '../../agent/products';
 import InventoryAgent from '../../agent/inventory';
 import CollectionsAgent from '../../agent/collections';
 import LocationsAgent from '../../agent/locations';
+import FilesAgent from '../../agent/files';
 
 export default function AgentsScreen() {
   const user = db.useUser();
@@ -22,6 +23,7 @@ export default function AgentsScreen() {
     { id: 'inventory', emoji: '📦', name: 'Inventory', component: <InventoryAgent /> },
     { id: 'locations', emoji: '📍', name: 'Locations', component: <LocationsAgent /> },
     { id: 'collections', emoji: '🎈', name: 'Collections', component: <CollectionsAgent /> },
+    { id: 'files', emoji: '📁', name: 'Files', component: <FilesAgent /> },
   ];
 
   const selectedAgentData = agents.find(agent => agent.id === selectedAgent);

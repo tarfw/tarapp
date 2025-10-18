@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +9,7 @@ import { id } from '@instantdb/react-native';
 
 export default function HomeScreen() {
   const [newTask, setNewTask] = useState('');
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
 
   // Get all tasks - this hook should be consistent
@@ -18,25 +19,17 @@ export default function HomeScreen() {
   const user = db.useUser();
 
   const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await db.auth.signOut();
-              router.replace('/auth');
-            } catch (error) {
-              console.error('Error signing out:', error);
-            }
-          },
-        },
-      ]
-    );
+    if (signingOut) return;
+
+    setSigningOut(true);
+    try {
+      await db.auth.signOut();
+      router.replace('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   // If tasks are loading, show loading state
@@ -117,8 +110,12 @@ export default function HomeScreen() {
             </Text>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-              <Text style={styles.signOutText}>Sign out</Text>
+            <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton} disabled={signingOut}>
+              {signingOut ? (
+                <ActivityIndicator size="small" color="#6B7280" />
+              ) : (
+                <Text style={styles.signOutText}>Sign out</Text>
+              )}
             </TouchableOpacity>
             <Text style={styles.userEmail}>{user?.email?.split('@')[0] || 'Guest'}</Text>
           </View>

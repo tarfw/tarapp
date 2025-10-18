@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
+View,
+Text,
+TextInput,
+TouchableOpacity,
+StyleSheet,
+SafeAreaView,
+KeyboardAvoidingView,
+Platform,
+ActivityIndicator,
 } from 'react-native';
 import { Redirect, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import db from '../lib/db';
+import AppLogo from '../components/AppLogo';
 
 export default function Auth() {
   const [sentEmail, setSentEmail] = useState('');
@@ -35,7 +34,7 @@ export default function Auth() {
       setSentEmail(email);
     } catch (error: any) {
       console.error('Error sending magic code:', error);
-      Alert.alert('Error', error.body?.message || 'Failed to send magic code');
+      // Removed dialog, errors logged to console
     } finally {
       setLoading(false);
     }
@@ -47,13 +46,8 @@ export default function Auth() {
       const result = await db.auth.signInWithMagicCode({ email: sentEmail, code });
       console.log('Sign in result:', result);
 
-      // Store refresh token for persistence
-      const refreshToken = db.auth.getRefreshToken();
-      console.log('Refresh token after sign in:', refreshToken);
-      if (refreshToken) {
-        await AsyncStorage.setItem('instant_refresh_token', refreshToken);
-        console.log('Persisted auth token');
-      }
+      // Note: Refresh token storage not available in this version
+      // Auth persistence handled by Instant DB automatically
 
       console.log('Navigating to workspace...');
       // Small delay to allow auth state to update
@@ -62,7 +56,8 @@ export default function Auth() {
         console.log('Navigation called');
       }, 100);
     } catch (error: any) {
-      Alert.alert('Error', error.body?.message || 'Failed to verify code');
+      console.error('Error verifying magic code:', error);
+      // Removed dialog, errors logged to console
     } finally {
       setLoading(false);
     }
@@ -102,7 +97,7 @@ function EmailStep({
 
   const handleSubmit = () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Please enter your email');
+      console.log('Please enter your email');
       return;
     }
     onSendCode(email.trim());
@@ -110,10 +105,8 @@ function EmailStep({
 
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>
-        Enter your email address and we'll send you a verification code.
-      </Text>
+      <AppLogo style={styles.logo} />
+      <Text style={styles.appTitle}>Everything app</Text>
 
       <TextInput
         style={styles.input}
@@ -157,7 +150,7 @@ function CodeStep({
 
   const handleSubmit = () => {
     if (!code.trim()) {
-      Alert.alert('Error', 'Please enter the verification code');
+      console.log('Please enter the verification code');
       return;
     }
     onVerifyCode(code.trim());
@@ -165,11 +158,8 @@ function CodeStep({
 
   return (
     <View style={styles.stepContainer}>
-      <Text style={styles.title}>Check your email</Text>
-      <Text style={styles.subtitle}>
-        We sent a verification code to{'\n'}
-        <Text style={styles.emailText}>{sentEmail}</Text>
-      </Text>
+      <AppLogo style={styles.logo} />
+      <Text style={styles.appTitle}>Everything app</Text>
 
       <TextInput
         style={styles.codeInput}
@@ -213,67 +203,94 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
+    paddingVertical: 20,
   },
   stepContainer: {
     width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 32,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  emailText: {
-    fontWeight: '600',
-    color: '#000',
-  },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#D1D5DB',
-    fontSize: 16,
-    paddingVertical: 12,
-    marginBottom: 32,
-    color: '#000',
-  },
-  codeInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#D1D5DB',
-    fontSize: 24,
-    paddingVertical: 12,
-    marginBottom: 32,
-    color: '#000',
-    letterSpacing: 8,
-  },
-  button: {
-    backgroundColor: '#2563EB',
-    paddingVertical: 12,
-    borderRadius: 6,
+  logo: {
     alignItems: 'center',
     marginBottom: 16,
   },
+  appTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: 32,
+    letterSpacing: -0.5,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    fontSize: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    color: '#111827',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  codeInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    fontSize: 24,
+    fontWeight: '500',
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    color: '#111827',
+    backgroundColor: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  button: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   buttonDisabled: {
     backgroundColor: '#9CA3AF',
+    shadowColor: '#9CA3AF',
+    shadowOpacity: 0.1,
+    elevation: 1,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   backButton: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    marginTop: 8,
   },
   backButtonText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

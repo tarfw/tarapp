@@ -60,54 +60,88 @@ export interface FileInfo {
 
 export class R2Service {
   static async uploadFile(fileUri: string, fileName: string): Promise<FileInfo> {
+    console.log('🚀 R2 Upload Started');
+    console.log('📁 File URI:', fileUri);
+    console.log('📄 File Name:', fileName);
+
     try {
       const fileKey = `uploads/${Date.now()}-${fileName}`;
       const dateString = getDateString();
       const path = `/${R2_BUCKET_NAME}/${fileKey}`;
 
+      console.log('🗝️ Generated File Key:', fileKey);
+      console.log('📅 Date String:', dateString);
+      console.log('🛣️ R2 Path:', path);
+
       // Get file info and content
+      console.log('📊 Getting file info...');
       const fileInfo = await FileSystem.getInfoAsync(fileUri, { size: true });
       if (!fileInfo.exists) {
         throw new Error('File does not exist');
       }
+
+      console.log('📏 File Size:', fileInfo.size, 'bytes');
+      console.log('📖 Reading file content...');
 
       // Read file content
       const fileContent = await FileSystem.readAsStringAsync(fileUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
+      console.log('📦 File content loaded, length:', fileContent.length);
+
       // Create authorization header
+      console.log('🔐 Creating authorization header...');
       const authHeader = await createAuthHeader('PUT', path, dateString);
+      console.log('🔑 Auth Header Created');
+
+      const contentType = this.getContentType(fileName);
+      console.log('📋 Content-Type:', contentType);
+
+      const uploadUrl = `${R2_ENDPOINT}${path}`;
+      console.log('🌐 Upload URL:', uploadUrl);
 
       // Upload to R2
-      const response = await fetch(`${R2_ENDPOINT}${path}`, {
+      console.log('⬆️ Starting upload to Cloudflare R2...');
+      const response = await fetch(uploadUrl, {
         method: 'PUT',
         headers: {
           'Authorization': authHeader,
           'Date': dateString,
-          'Content-Type': this.getContentType(fileName),
+          'Content-Type': contentType,
           'x-amz-acl': 'public-read',
         },
         body: Uint8Array.from(atob(fileContent), c => c.charCodeAt(0)),
       });
 
+      console.log('📡 Response Status:', response.status);
+      console.log('📡 Response Status Text:', response.statusText);
+
       if (!response.ok) {
+        console.error('❌ Upload failed with response:', await response.text());
         throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
       }
 
-      console.log('Successfully uploaded to R2:', fileName);
+      const publicUrl = `${R2_ENDPOINT}/${fileKey}`;
+      console.log('✅ Successfully uploaded to R2!');
+      console.log('🔗 Public URL:', publicUrl);
+      console.log('🗝️ File Key:', fileKey);
 
-      return {
+      const result = {
         id: Date.now().toString(),
         name: fileName,
         type: this.getFileType(fileName),
         size: formatFileSize(fileInfo.size || 0),
         uploadedAt: new Date().toISOString().split('T')[0],
-        url: `${R2_ENDPOINT}/${fileKey}`,
+        url: publicUrl,
         key: fileKey,
       };
+
+      console.log('📋 File Info Result:', result);
+      return result;
+
     } catch (error) {
-      console.error('R2 upload error:', error);
+      console.error('💥 R2 upload error:', error);
       throw new Error(`Failed to upload file: ${error.message}`);
     }
   }

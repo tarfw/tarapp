@@ -83,15 +83,25 @@ export default function FilesAgent() {
   }, []);
 
   const loadFiles = async () => {
+    console.log('📂 Loading files from R2...');
     try {
       setLoading(true);
+      console.log('🔄 Set loading state to true');
+
+      console.log('📡 Calling R2Service.listFiles()...');
       const fileList = await R2Service.listFiles();
+
+      console.log('📋 Received file list:', fileList.length, 'files');
+      console.log('📄 File list details:', fileList);
+
       setFiles(fileList);
+      console.log('✅ Files state updated');
     } catch (error) {
-      console.error('Failed to load files from R2:', error);
+      console.error('💥 Failed to load files from R2:', error);
       Alert.alert('Error', 'Failed to load files. Please check your connection.');
       setFiles([]); // Empty array on error
     } finally {
+      console.log('🔄 Setting loading state to false');
       setLoading(false);
     }
   };
@@ -101,70 +111,114 @@ export default function FilesAgent() {
   );
 
   const uploadFile = async () => {
+    console.log('📱 Upload button pressed - starting file picker');
+
     try {
+      console.log('📂 Opening document picker...');
       const result = await DocumentPicker.getDocumentAsync({
         type: '*/*',
         copyToCacheDirectory: true,
       });
 
+      console.log('📋 Document picker result:', result);
+
       if (result.type === 'success') {
+        console.log('✅ File selected successfully');
+        console.log('📄 Selected file:', result.name);
+        console.log('📏 File size:', result.size);
+        console.log('🗂️ File MIME type:', result.mimeType);
+        console.log('📍 File URI:', result.uri);
+
         setUploading(true);
+        console.log('⏳ Setting upload state to true');
 
-        console.log('Uploading file:', result.name);
-
+        console.log('🚀 Calling R2Service.uploadFile...');
         // Upload to Cloudflare R2
         const uploadedFile = await R2Service.uploadFile(result.uri, result.name);
 
+        console.log('📥 Upload completed, result:', uploadedFile);
+
+        console.log('🔄 Updating local files state...');
         setFiles(prev => [uploadedFile, ...prev]);
+
+        console.log('✅ File added to local state');
         Alert.alert('Success', 'File uploaded successfully to Cloudflare R2!');
+        console.log('🎉 Upload process complete!');
+      } else {
+        console.log('❌ User cancelled file picker');
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('💥 UI Upload error:', error);
       Alert.alert('Error', 'Failed to upload file. Please check your connection.');
     } finally {
+      console.log('🔄 Setting upload state to false');
       setUploading(false);
     }
   };
 
   const downloadFile = async (file: FileInfo) => {
+    console.log('📥 Starting download for file:', file.name);
+    console.log('🗝️ File key:', file.key);
+
     try {
+      console.log('🔗 Getting download URL from R2...');
       // Download from Cloudflare R2
       const downloadUrl = await R2Service.downloadFile(file.key);
 
+      console.log('🌐 Download URL:', downloadUrl);
+
       if (await Sharing.isAvailableAsync()) {
+        console.log('📤 Opening share dialog...');
         await Sharing.shareAsync(downloadUrl, {
           mimeType: getMimeType(file.name),
           dialogTitle: `Download ${file.name}`,
         });
+        console.log('✅ File shared/downloaded successfully');
       } else {
+        console.log('❌ Sharing not available on this device');
         Alert.alert('Download', 'Sharing not available on this device');
       }
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('💥 Download error:', error);
       Alert.alert('Error', 'Failed to download file. Please try again.');
     }
   };
 
   const deleteFile = async (file: FileInfo) => {
+    console.log('🗑️ Delete initiated for file:', file.name);
+    console.log('🗝️ File key to delete:', file.key);
+
     Alert.alert(
       'Delete File',
       `Are you sure you want to delete "${file.name}"? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => console.log('❌ Delete cancelled by user')
+        },
         {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            console.log('✅ User confirmed delete, proceeding...');
             try {
+              console.log('🗑️ Calling R2Service.deleteFile...');
               // Delete from Cloudflare R2
               await R2Service.deleteFile(file.key);
 
+              console.log('✅ File deleted from R2 successfully');
+
+              console.log('🔄 Removing from local state...');
               // Remove from local state
               setFiles(prev => prev.filter(f => f.id !== file.id));
               setActionModalVisible(false);
+
+              console.log('✅ Local state updated, modal closed');
               Alert.alert('Success', 'File deleted successfully from Cloudflare R2!');
+              console.log('🎉 Delete operation complete!');
             } catch (error) {
-              console.error('Delete error:', error);
+              console.error('💥 Delete error:', error);
               Alert.alert('Error', 'Failed to delete file. Please try again.');
             }
           },

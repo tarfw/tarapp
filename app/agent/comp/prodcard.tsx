@@ -5,22 +5,6 @@ import { useLocalSearchParams } from 'expo-router';
 import db from '../../../lib/db';
 
 // Types based on schema
-type Product = {
-  id: string;
-  title?: string;
-  img?: string;
-  items?: {
-    id: string;
-    sku?: string;
-    inventory?: {
-      id: string;
-      available?: number;
-      committed?: number;
-      incoming?: number;
-    }[];
-  }[];
-};
-
 type ItemWithQty = {
   id: string;
   sku?: string;

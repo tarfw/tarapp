@@ -10,6 +10,7 @@ import InventoryAgent from '../../agent/inventory';
 import CollectionsAgent from '../../agent/collections';
 import LocationsAgent from '../../agent/locations';
 import FilesAgent from '../../agent/files';
+import StoresAgent from '../../agent/stores';
 
 export default function AgentsScreen() {
   const user = db.useUser();
@@ -20,6 +21,7 @@ export default function AgentsScreen() {
   const agents = [
     { id: 'orders', emoji: '🛒', name: 'Orders', component: <OrdersAgent /> },
     { id: 'products', emoji: '🛍️', name: 'Products', component: <ProductsAgent /> },
+    { id: 'stores', emoji: '🏪', name: 'Stores', component: <StoresAgent /> },
     { id: 'inventory', emoji: '📦', name: 'Inventory', component: <InventoryAgent /> },
     { id: 'locations', emoji: '📍', name: 'Locations', component: <LocationsAgent /> },
     { id: 'collections', emoji: '🎈', name: 'Collections', component: <CollectionsAgent /> },

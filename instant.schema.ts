@@ -1,6 +1,6 @@
 // Docs: https://www.instantdb.com/docs/modeling-data
 
-import { i } from "@instantdb/react-native";
+import { i } from "@instantdb/react";
 
 const _schema = i.schema({
   entities: {
@@ -10,6 +10,7 @@ const _schema = i.schema({
     }),
     $users: i.entity({
       email: i.string().unique().indexed().optional(),
+      imageURL: i.string().optional(),
       type: i.string().optional(),
     }),
     address: i.entity({
@@ -43,6 +44,7 @@ const _schema = i.schema({
     items: i.entity({
       barcode: i.string().optional(),
       cost: i.number().optional(),
+      image: i.string().optional(),
       op1: i.string().optional(),
       op2: i.string().optional(),
       op3: i.string().optional(),
@@ -92,8 +94,9 @@ const _schema = i.schema({
     }),
     stores: i.entity({
       currency: i.string().optional(),
-      domain: i.string().optional(),
+      domain: i.string().unique().optional(),
       name: i.string().optional(),
+      subdomain: i.string().unique().optional(),
       timezone: i.string().optional(),
     }),
     tasks: i.entity({
@@ -248,6 +251,18 @@ const _schema = i.schema({
         on: "stores",
         has: "many",
         label: "products",
+      },
+    },
+    stores$users: {
+      forward: {
+        on: "stores",
+        has: "many",
+        label: "$users",
+      },
+      reverse: {
+        on: "$users",
+        has: "many",
+        label: "stores",
       },
     },
     storesAddress: {

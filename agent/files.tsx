@@ -103,6 +103,15 @@ const getMimeType = (fileName: string): string => {
   return mimeTypes[ext || ''] || 'application/octet-stream';
 };
 
+// Helper function to format file size
+const formatFileSize = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 export default function FilesAgent() {
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,9 +155,10 @@ export default function FilesAgent() {
 
         console.log('Uploading file:', result.name);
 
-        // Upload to Cloudflare R2
+        // Upload to Cloudflare R2 (currently mocked)
         const uploadedFile = await R2Service.uploadFile(result.uri, result.name);
 
+        // For demo, add some mock files to show the UI working
         setFiles(prev => [uploadedFile, ...prev]);
         Alert.alert('Success', 'File uploaded successfully!');
       }

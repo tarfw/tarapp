@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { id } from '@instantdb/react-native';
 import db from '../lib/db';
 
@@ -160,24 +161,36 @@ export default function ProductsAgent() {
     router.push(`/agent/items?productId=${productId}`);
   };
 
+  const navigateToProdCard = (productId: string) => {
+    router.push(`/agent/comp/prodcard?productId=${productId}`);
+  };
+
   const renderItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity 
-      style={styles.listItem}
-      onPress={() => openEditForm(item)}
-      onLongPress={() => showDeleteConfirmation(item.id)}
-    >
-      <View style={styles.productHeader}>
-        <Text style={styles.listItemTitle}>{item.title || 'Untitled Product'}</Text>
-        <TouchableOpacity 
-          onPress={() => navigateToItems(item.id)}
-          style={styles.itemsCountContainer}
-        >
-          <Text style={styles.itemsCount}>
-            {item.items?.length || 0}
-          </Text>
-        </TouchableOpacity>
+  <TouchableOpacity
+  style={styles.listItem}
+  onPress={() => openEditForm(item)}
+  onLongPress={() => showDeleteConfirmation(item.id)}
+  >
+  <View style={styles.productHeader}>
+  <Text style={styles.listItemTitle}>{item.title || 'Untitled Product'}</Text>
+  <View style={styles.rightSection}>
+  <TouchableOpacity
+    onPress={() => navigateToItems(item.id)}
+      style={styles.itemsCountContainer}
+  >
+      <Text style={styles.itemsCount}>
+          {item.items?.length || 0}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigateToProdCard(item.id)}
+            style={styles.arrowContainer}
+          >
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
       </View>
-    </TouchableOpacity>
+  </TouchableOpacity>
   );
 
   if (isLoading) {
@@ -437,6 +450,20 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  arrowContainer: {
+    backgroundColor: '#f0f0f0',
+    padding: 8,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 36,
+    minHeight: 36,
   },
   label: {
     fontSize: 16,

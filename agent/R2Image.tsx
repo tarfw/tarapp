@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import R2Service from "../lib/r2Service";
 
 // Simple in-memory cache for signed URLs - permanent cache (no expiry)
 const urlCache = new Map<string, string>();
@@ -30,7 +29,7 @@ export default function R2Image({
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    const loadSignedUrl = async () => {
+    const loadImageUrl = async () => {
       if (!url) {
         setLoading(false);
         return;
@@ -57,33 +56,11 @@ export default function R2Image({
           return;
         }
 
-        // Check if it's already a signed URL or public URL
-        if (url.includes("X-Amz-Algorithm") || url.includes("Signature")) {
-          // Already a signed URL
+        // For images, use the direct public URL (following tarsilvers-main approach)
+        // Assuming the bucket is public and images can be accessed directly
+        if (!abortController.signal.aborted) {
           setSignedUrl(url);
-          // Cache it permanently
           urlCache.set(url, url);
-        } else {
-          // Extract key from URL and generate signed URL
-          const key = extractKeyFromUrl(url);
-
-          if (key) {
-            const signed = await R2Service.getSignedUrl(key);
-
-            if (!abortController.signal.aborted) {
-              setSignedUrl(signed);
-              // Cache the signed URL permanently
-              if (signed) {
-                urlCache.set(url, signed);
-              }
-            }
-          } else {
-            // Fallback to original URL
-            if (!abortController.signal.aborted) {
-              setSignedUrl(url);
-              urlCache.set(url, url);
-            }
-          }
         }
       } catch (err) {
         if (!abortController.signal.aborted) {
@@ -97,7 +74,7 @@ export default function R2Image({
       }
     };
 
-    loadSignedUrl();
+    loadImageUrl();
 
     // Cleanup function
     return () => {
@@ -153,16 +130,7 @@ export default function R2Image({
   );
 }
 
-// Extract key from URL
-function extractKeyFromUrl(url: string): string | null {
-  try {
-    const urlObj = new URL(url);
-    const key = urlObj.pathname.substring(1); // Remove leading slash
-    return key;
-  } catch (error) {
-    return null;
-  }
-}
+
 
 const styles = StyleSheet.create({
   loadingContainer: {

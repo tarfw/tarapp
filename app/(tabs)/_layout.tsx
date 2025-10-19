@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import Entypo from '@expo/vector-icons/Entypo';
 import { View, ActivityIndicator, Text } from 'react-native';
 import db from '../../lib/db';
 
@@ -70,7 +71,7 @@ function ProtectedTabs() {
           title: 'People',
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="at" size={size} color={color} />
+            <Entypo name="email" size={size} color={color} />
           ),
         }}
       />

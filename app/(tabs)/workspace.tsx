@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import db from '../../lib/db';
@@ -15,7 +15,7 @@ export default function HomeScreen() {
   const { data: tasks, isLoading: tasksLoading } = db.useQuery({ tasks: {} });
 
   // Get user info - this hook should be consistent
-  const user = db.useUser();
+  db.useUser();
 
   const handleLongPress = (task) => {
     setSelectedTask(task);

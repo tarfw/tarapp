@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'white',
     borderRadius: 8,
   },
   noInventoryText: {

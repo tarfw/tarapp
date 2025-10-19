@@ -12,7 +12,6 @@ import {
   SafeAreaView,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import R2Service, { FileInfo } from '../lib/r2Service';
@@ -20,11 +19,15 @@ import R2Image from './R2Image';
 
 // File management with Cloudflare R2 integration
 
+const isImageType = (type: string) => type === 'image' || type === 'oimage';
+
 const getFileIcon = (type: string) => {
   switch (type) {
     case 'pdf':
       return '📄';
     case 'image':
+      return '🖼️';
+    case 'oimage':
       return '🖼️';
     case 'document':
       return '📝';
@@ -257,9 +260,7 @@ export default function FilesAgent() {
         setActionModalVisible(true);
       }}
     >
-      <View style={styles.fileIcon}>
-        <Text style={styles.fileIconText}>{getFileIcon(item.type)}</Text>
-      </View>
+      <Text style={styles.fileIcon}>{getFileIcon(item.type)}</Text>
       <View style={styles.fileInfo}>
         <Text style={styles.fileName} numberOfLines={1}>
           {item.name}
@@ -268,39 +269,11 @@ export default function FilesAgent() {
           {item.size} • {item.uploadedAt}
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.moreButton}
-        onPress={() => {
-          setSelectedFile(item);
-          setActionModalVisible(true);
-        }}
-      >
-        <MaterialIcons name="more-vert" size={20} color="#666" />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>📁 Files</Text>
-        <TouchableOpacity
-          style={[styles.uploadButton, uploading && styles.uploadButtonDisabled]}
-          onPress={uploadFile}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <ActivityIndicator color="white" size="small" />
-          ) : (
-            <>
-              <Ionicons name="cloud-upload" size={16} color="white" />
-              <Text style={styles.uploadButtonText}>Upload</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
       {/* Search */}
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
@@ -326,6 +299,7 @@ export default function FilesAgent() {
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           style={styles.filesList}
+          contentContainerStyle={filteredFiles.length === 0 ? styles.emptyListContent : undefined}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           ListEmptyComponent={
             <View style={styles.emptyState}>
@@ -338,6 +312,19 @@ export default function FilesAgent() {
           }
         />
       )}
+
+      <TouchableOpacity
+        style={[styles.fab, uploading && styles.fabDisabled]}
+        onPress={uploadFile}
+        disabled={uploading}
+        activeOpacity={0.8}
+      >
+        {uploading ? (
+          <ActivityIndicator color="white" size="small" />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
+      </TouchableOpacity>
 
       {/* File Actions Modal */}
       <Modal
@@ -361,7 +348,7 @@ export default function FilesAgent() {
           {selectedFile && (
             <View style={styles.modalBody}>
               <View style={styles.filePreview}>
-                {selectedFile.type === 'image' ? (
+                {isImageType(selectedFile.type) ? (
                   <R2Image
                     url={selectedFile.url}
                     style={styles.fullScreenImage}
@@ -431,7 +418,7 @@ export default function FilesAgent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
@@ -469,13 +456,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    marginHorizontal: 20,
-    marginVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   searchIcon: {
     marginRight: 12,
@@ -487,31 +471,17 @@ const styles = StyleSheet.create({
   },
   filesList: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginVertical: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   fileIcon: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 20,
     marginRight: 12,
-  },
-  fileIconText: {
-    fontSize: 24,
   },
   fileInfo: {
     flex: 1,
@@ -525,18 +495,22 @@ const styles = StyleSheet.create({
   fileMeta: {
     fontSize: 12,
     color: '#6B7280',
-  },
-  moreButton: {
-    padding: 4,
+    marginTop: 2,
   },
   separator: {
-    height: 8,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginLeft: 20,
+  },
+  emptyListContent: {
+    flexGrow: 1,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+    backgroundColor: 'white',
   },
   emptyStateTitle: {
     fontSize: 18,
@@ -633,5 +607,24 @@ const styles = StyleSheet.create({
   },
   deleteActionText: {
     color: '#DC2626',
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  fabDisabled: {
+    backgroundColor: '#9CA3AF',
   },
 });

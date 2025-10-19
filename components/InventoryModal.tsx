@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'white',
   },
   selectorContainer: {
     flexDirection: 'row',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   selectorOption: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f5f5',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,

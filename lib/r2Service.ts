@@ -322,26 +322,25 @@ export class R2Service {
       const amzDate = getAmzDate();
       const dateStamp = amzDate.slice(0, 8);
       const expires = expiresIn.toString();
+      const payloadHash = 'UNSIGNED-PAYLOAD';
 
       const credential = `${config.accessKeyId}/${dateStamp}/auto/s3/aws4_request`;
 
       const canonicalUri = `/${config.bucketName}/${key}`;
 
       // Build query params and sort them
-      const queryParams = [
-        { key: 'X-Amz-Algorithm', value: 'AWS4-HMAC-SHA256' },
-        { key: 'X-Amz-Credential', value: credential },
-        { key: 'X-Amz-Date', value: amzDate },
-        { key: 'X-Amz-Expires', value: expires },
-        { key: 'X-Amz-SignedHeaders', value: 'host' },
-      ];
+      const queryParams = new URLSearchParams();
+      queryParams.set('X-Amz-Algorithm', 'AWS4-HMAC-SHA256');
+      queryParams.set('X-Amz-Credential', credential);
+      queryParams.set('X-Amz-Date', amzDate);
+      queryParams.set('X-Amz-Expires', expires);
+      queryParams.set('X-Amz-SignedHeaders', 'host');
 
-      queryParams.sort((a, b) => a.key.localeCompare(b.key));
-
-      const canonicalQuery = queryParams.map(p => `${p.key}=${encodeURIComponent(p.value)}`).join('&');
+      const canonicalQuery = getCanonicalQuery(queryParams);
       console.log('📋 Canonical query:', canonicalQuery);
 
-      const canonicalHeaders = `host:${new URL(config.endpoint).hostname}`;
+      const hostname = new URL(config.endpoint).hostname;
+      const canonicalHeaders = `host:${hostname}`;
       const signedHeaders = 'host';
       console.log('📋 Canonical headers:', canonicalHeaders);
 
@@ -352,7 +351,7 @@ export class R2Service {
         canonicalHeaders,
         '',
         signedHeaders,
-        EMPTY_PAYLOAD_HASH,
+        payloadHash,
       ].join('\n');
       console.log('📄 Canonical request:', canonicalRequest.replace(/\n/g, '\\n'));
 

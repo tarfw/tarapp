@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inventoryCountContainer: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f5f5f5',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 12,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 12,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'white',
   },
   confirmationOverlay: {
     position: 'absolute',

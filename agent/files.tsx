@@ -98,7 +98,7 @@ export default function FilesAgent() {
       console.log('✅ Files state updated');
     } catch (error) {
       console.error('💥 Failed to load files from R2:', error);
-      Alert.alert('Error', 'Failed to load files. Please check your connection.');
+      Alert.alert('Connection Error', 'Unable to load files from Cloudflare R2. Please check your internet connection and try again.');
       setFiles([]); // Empty array on error
     } finally {
       console.log('🔄 Setting loading state to false');
@@ -308,9 +308,9 @@ export default function FilesAgent() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="cloud-offline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyStateTitle}>No files uploaded</Text>
+              <Text style={styles.emptyStateTitle}>No files found</Text>
               <Text style={styles.emptyStateSubtitle}>
-              Upload files to Cloudflare R2 to get started
+              Upload your first file to Cloudflare R2
               </Text>
             </View>
           }

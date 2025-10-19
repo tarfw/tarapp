@@ -116,22 +116,7 @@ export class R2Service {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Upload failed with response:', errorText);
-        console.log('ℹ️ Upload failed due to authentication - this is expected with mock auth');
-        console.log('✅ Simulating successful upload for UI testing');
-
-        // For testing purposes, simulate success even though auth fails
-        const result = {
-          id: Date.now().toString(),
-          name: fileName,
-          type: this.getFileType(fileName),
-          size: formatFileSize(fileInfo.size || 0),
-          uploadedAt: new Date().toISOString().split('T')[0],
-          url: `https://mock-upload-url.com/${fileKey}`,
-          key: fileKey,
-        };
-
-        console.log('📋 Mock upload result:', result);
-        return result;
+        throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
       }
 
       const publicUrl = `${R2_ENDPOINT}/${fileKey}`;
@@ -199,15 +184,13 @@ export class R2Service {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Delete failed with response:', errorText);
-        console.log('ℹ️ Delete failed due to authentication - simulating success for UI testing');
-        return; // Simulate success for testing
+        throw new Error(`Delete failed: ${response.status} ${response.statusText}`);
       }
 
       console.log('✅ Successfully deleted from R2:', fileKey);
     } catch (error) {
       console.error('💥 R2 delete error:', error);
-      console.log('ℹ️ Simulating successful delete for UI testing');
-      // Don't throw error - simulate success for testing
+      throw new Error(`Failed to delete file: ${error.message}`);
     }
   }
 
@@ -239,10 +222,9 @@ export class R2Service {
   console.log('📡 List response status text:', response.statusText);
 
   if (!response.ok) {
-  console.error('❌ List request failed');
-  // Since we're using mock auth, this will fail - return empty array for now
-  console.log('ℹ️ Using mock data due to auth limitations');
-        return this.getMockFiles();
+    const errorText = await response.text();
+    console.error('❌ List request failed:', errorText);
+    throw new Error(`List failed: ${response.status} ${response.statusText}`);
   }
 
   const xmlText = await response.text();
@@ -276,35 +258,11 @@ export class R2Service {
       return files;
     } catch (error) {
       console.error('💥 R2 list error:', error);
-      console.log('ℹ️ Falling back to mock data');
-      return this.getMockFiles();
+      throw new Error(`Failed to list files: ${error.message}`);
     }
   }
 
-  // Mock data for testing when R2 is not available
-  private static getMockFiles(): FileInfo[] {
-    console.log('📋 Returning mock file data for testing');
-    return [
-      {
-        id: 'mock1',
-        name: 'sample_document.pdf',
-        type: 'pdf',
-        size: '1.2 MB',
-        uploadedAt: '2024-01-20',
-        url: 'https://example.com/mock1.pdf',
-        key: 'uploads/mock1.pdf',
-      },
-      {
-        id: 'mock2',
-        name: 'test_image.jpg',
-        type: 'image',
-        size: '2.1 MB',
-        uploadedAt: '2024-01-19',
-        url: 'https://example.com/mock2.jpg',
-        key: 'uploads/mock2.jpg',
-      },
-    ];
-  }
+
 
   private static getContentType(fileName: string): string {
     const ext = fileName.split('.').pop()?.toLowerCase();

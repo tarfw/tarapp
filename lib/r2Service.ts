@@ -323,7 +323,7 @@ export class R2Service {
       const dateStamp = amzDate.slice(0, 8);
       const expires = expiresIn.toString();
 
-      const credential = `${config.accessKeyId}/${dateStamp}/auto/s3/aws4_request`;
+      const credential = `${config.accessKeyId}/${dateStamp}/apac/s3/aws4_request`;
 
       const canonicalUri = `/${config.bucketName}/${key}`;
 
@@ -361,14 +361,14 @@ export class R2Service {
       const stringToSign = [
         'AWS4-HMAC-SHA256',
         amzDate,
-        `${dateStamp}/auto/s3/aws4_request`,
+        `${dateStamp}/apac/s3/aws4_request`,
         hashedCanonicalRequest,
       ].join('\n');
       console.log('📝 String to sign:', stringToSign.replace(/\n/g, '\\n'));
 
-      // Calculate signature (using auto region for R2)
+      // Calculate signature (using apac region for R2)
       const kDate = CryptoJS.HmacSHA256(dateStamp, `AWS4${config.secretAccessKey}`);
-      const kRegion = CryptoJS.HmacSHA256('auto', kDate);
+      const kRegion = CryptoJS.HmacSHA256('apac', kDate);
       const kService = CryptoJS.HmacSHA256('s3', kRegion);
       const kSigning = CryptoJS.HmacSHA256('aws4_request', kService);
       const signature = CryptoJS.HmacSHA256(stringToSign, kSigning).toString(CryptoJS.enc.Hex);

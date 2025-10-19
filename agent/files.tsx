@@ -16,6 +16,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import R2Service, { FileInfo } from '../lib/r2Service';
+import R2Image from './R2Image';
 
 // File management with Cloudflare R2 integration
 
@@ -98,7 +99,8 @@ export default function FilesAgent() {
       console.log('✅ Files state updated');
     } catch (error) {
       console.error('💥 Failed to load files from R2:', error);
-      Alert.alert('Connection Error', 'Unable to load files from Cloudflare R2. Please check your internet connection and try again.');
+      console.log('ℹ️ File listing disabled due to network issues - uploads will still work');
+      console.log('ℹ️ Showing empty list but uploads should still work');
       setFiles([]); // Empty array on error
     } finally {
       console.log('🔄 Setting loading state to false');
@@ -122,19 +124,34 @@ export default function FilesAgent() {
 
       console.log('📋 Document picker result:', result);
 
-      if (result.type === 'success') {
+      const canceled = 'canceled' in result ? result.canceled : result.type !== 'success';
+      if (!canceled) {
+        const asset = 'assets' in result ? result.assets?.[0] : result;
+        if (!asset || !asset.uri) {
+          console.log('⚠️ No file asset returned from picker');
+          Alert.alert('Error', 'Unable to read selected file.');
+          return;
+        }
+
+        const fileName = asset.name || asset.uri.split('/').pop() || 'upload';
+
         console.log('✅ File selected successfully');
-        console.log('📄 Selected file:', result.name);
-        console.log('📏 File size:', result.size);
-        console.log('🗂️ File MIME type:', result.mimeType);
-        console.log('📍 File URI:', result.uri);
+        console.log('📄 Selected file:', fileName);
+        console.log('📏 File size:', asset.size);
+        console.log('🗂️ File MIME type:', asset.mimeType);
+        console.log('📍 File URI:', asset.uri);
 
         setUploading(true);
         console.log('⏳ Setting upload state to true');
 
         console.log('🚀 Calling R2Service.uploadFile...');
         // Upload to Cloudflare R2
-        const uploadedFile = await R2Service.uploadFile(result.uri, result.name);
+        const uploadedFile = await R2Service.uploadFile({
+          uri: asset.uri,
+          name: fileName,
+          size: asset.size,
+          type: asset.mimeType
+        });
 
         console.log('📥 Upload completed, result:', uploadedFile);
 
@@ -161,11 +178,15 @@ export default function FilesAgent() {
     console.log('🗝️ File key:', file.key);
 
     try {
-      console.log('🔗 Getting download URL from R2...');
-      // Download from Cloudflare R2
-      const downloadUrl = await R2Service.downloadFile(file.key);
+      console.log('🔗 Getting signed URL from R2...');
+      // Get signed URL from Cloudflare R2
+      const downloadUrl = await R2Service.getSignedUrl(file.key);
 
-      console.log('🌐 Download URL:', downloadUrl);
+      if (!downloadUrl) {
+        throw new Error('Failed to generate signed URL');
+      }
+
+      console.log('🌐 Signed URL:', downloadUrl);
 
       if (await Sharing.isAvailableAsync()) {
         console.log('📤 Opening share dialog...');
@@ -231,6 +252,7 @@ export default function FilesAgent() {
     <TouchableOpacity
       style={styles.fileItem}
       onPress={() => {
+        console.log('📱 Tapping file:', item.name, 'key:', item.key, 'type:', item.type);
         setSelectedFile(item);
         setActionModalVisible(true);
       }}
@@ -308,9 +330,9 @@ export default function FilesAgent() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="cloud-offline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyStateTitle}>No files found</Text>
+              <Text style={styles.emptyStateTitle}>File listing disabled</Text>
               <Text style={styles.emptyStateSubtitle}>
-              Upload your first file to Cloudflare R2
+              Uploads work but listing is disabled due to network issues
               </Text>
             </View>
           }
@@ -320,71 +342,87 @@ export default function FilesAgent() {
       {/* File Actions Modal */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent={false}
         visible={actionModalVisible}
         onRequestClose={() => setActionModalVisible(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setActionModalVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            {selectedFile && (
-              <>
-                <View style={styles.filePreview}>
-                  <Text style={styles.previewIcon}>{getFileIcon(selectedFile.type)}</Text>
-                  <Text style={styles.previewName} numberOfLines={2}>
-                    {selectedFile.name}
-                  </Text>
-                  <Text style={styles.previewMeta}>
-                    {selectedFile.size} • {selectedFile.uploadedAt}
-                  </Text>
-                </View>
+        <SafeAreaView style={styles.fullScreenModal}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setActionModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>File Details</Text>
+            <View style={{ width: 24 }} />
+          </View>
 
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => {
-                      downloadFile(selectedFile);
-                      setActionModalVisible(false);
-                    }}
-                  >
-                    <Ionicons name="download" size={20} color="#3B82F6" />
-                    <Text style={styles.actionButtonText}>Download</Text>
-                  </TouchableOpacity>
+          {selectedFile && (
+            <View style={styles.modalBody}>
+              <View style={styles.filePreview}>
+                {selectedFile.type === 'image' ? (
+                  <R2Image
+                    url={selectedFile.url}
+                    style={styles.fullScreenImage}
+                    resizeMode="contain"
+                    onLoad={() => console.log('🖼️ Image loaded successfully')}
+                    onError={(error) => console.log('❌ Image failed to load:', error)}
+                  />
+                ) : (
+                  <View style={styles.iconContainer}>
+                    <Text style={styles.largeIcon}>{getFileIcon(selectedFile.type)}</Text>
+                  </View>
+                )}
+              </View>
 
-                  <TouchableOpacity
-                    style={styles.actionButton}
-                    onPress={() => {
-                      // Share file link
-                      if (selectedFile.url) {
-                        Sharing.shareAsync(selectedFile.url, {
+              <View style={styles.bottomActions}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    downloadFile(selectedFile);
+                    setActionModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="download" size={20} color="#3B82F6" />
+                  <Text style={styles.actionButtonText}>Download</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={async () => {
+                    // Share file link with signed URL
+                    if (selectedFile) {
+                      const signedUrl = await R2Service.getSignedUrl(selectedFile.key);
+                      if (signedUrl) {
+                        Sharing.shareAsync(signedUrl, {
                           dialogTitle: `Share ${selectedFile.name}`,
                         }).catch(error => {
                           console.error('Share error:', error);
                           Alert.alert('Error', 'Failed to share file');
                         });
+                      } else {
+                        Alert.alert('Error', 'Failed to generate share link');
                       }
-                      setActionModalVisible(false);
-                    }}
-                  >
-                    <Ionicons name="share" size={20} color="#10B981" />
-                    <Text style={styles.actionButtonText}>Share</Text>
-                  </TouchableOpacity>
+                    }
+                    setActionModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="share" size={20} color="#10B981" />
+                  <Text style={styles.actionButtonText}>Share</Text>
+                </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteActionButton]}
-                    onPress={() => deleteFile(selectedFile)}
-                  >
-                    <Ionicons name="trash" size={20} color="#EF4444" />
-                    <Text style={styles.deleteActionText}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deleteActionButton]}
+                  onPress={() => deleteFile(selectedFile)}
+                >
+                  <Ionicons name="trash" size={20} color="#EF4444" />
+                  <Text style={styles.deleteActionText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
@@ -524,49 +562,66 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 16,
   },
-  modalOverlay: {
+  fullScreenModal: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: '#fff',
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
-  },
-  filePreview: {
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
-  previewIcon: {
-    fontSize: 48,
-    marginBottom: 12,
+  closeButton: {
+    padding: 4,
   },
-  previewName: {
+  modalTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 4,
   },
-  previewMeta: {
-    fontSize: 14,
-    color: '#6B7280',
+  modalBody: {
+    flex: 1,
   },
-  actionButtons: {
-    gap: 12,
+  filePreview: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullScreenImage: {
+    flex: 1,
+    width: '100%',
+  },
+  iconContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  largeIcon: {
+    fontSize: 120,
+  },
+
+  bottomActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     backgroundColor: '#F3F4F6',
     borderRadius: 12,
-    gap: 12,
+    gap: 8,
+    minWidth: 80,
+    justifyContent: 'center',
   },
   actionButtonText: {
     fontSize: 16,

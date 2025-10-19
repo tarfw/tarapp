@@ -17,41 +17,7 @@ import * as Sharing from 'expo-sharing';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import R2Service, { FileInfo } from '../lib/r2Service';
 
-// Mock file data - replace with actual R2 API calls
-const mockFiles = [
-  {
-    id: '1',
-    name: 'project_proposal.pdf',
-    type: 'pdf',
-    size: '2.4 MB',
-    uploadedAt: '2024-01-15',
-    url: 'https://example.com/file1.pdf',
-  },
-  {
-    id: '2',
-    name: 'design_mockup.png',
-    type: 'image',
-    size: '1.8 MB',
-    uploadedAt: '2024-01-14',
-    url: 'https://example.com/file2.png',
-  },
-  {
-    id: '3',
-    name: 'meeting_notes.docx',
-    type: 'document',
-    size: '856 KB',
-    uploadedAt: '2024-01-13',
-    url: 'https://example.com/file3.docx',
-  },
-  {
-    id: '4',
-    name: 'presentation.pptx',
-    type: 'presentation',
-    size: '5.2 MB',
-    uploadedAt: '2024-01-12',
-    url: 'https://example.com/file4.pptx',
-  },
-];
+// File management with Cloudflare R2 integration
 
 const getFileIcon = (type: string) => {
   switch (type) {
@@ -122,9 +88,9 @@ export default function FilesAgent() {
       const fileList = await R2Service.listFiles();
       setFiles(fileList);
     } catch (error) {
-      console.error('Failed to load files:', error);
-      // Fallback to mock data if R2 fails
-      setFiles(mockFiles as FileInfo[]);
+      console.error('Failed to load files from R2:', error);
+      Alert.alert('Error', 'Failed to load files. Please check your connection.');
+      setFiles([]); // Empty array on error
     } finally {
       setLoading(false);
     }
@@ -146,12 +112,11 @@ export default function FilesAgent() {
 
         console.log('Uploading file:', result.name);
 
-        // Upload to Cloudflare R2 (currently mocked)
+        // Upload to Cloudflare R2
         const uploadedFile = await R2Service.uploadFile(result.uri, result.name);
 
-        // For demo, add some mock files to show the UI working
         setFiles(prev => [uploadedFile, ...prev]);
-        Alert.alert('Success', 'File uploaded successfully!');
+        Alert.alert('Success', 'File uploaded successfully to Cloudflare R2!');
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -197,7 +162,7 @@ export default function FilesAgent() {
               // Remove from local state
               setFiles(prev => prev.filter(f => f.id !== file.id));
               setActionModalVisible(false);
-              Alert.alert('Success', 'File deleted successfully!');
+              Alert.alert('Success', 'File deleted successfully from Cloudflare R2!');
             } catch (error) {
               console.error('Delete error:', error);
               Alert.alert('Error', 'Failed to delete file. Please try again.');
@@ -289,9 +254,9 @@ export default function FilesAgent() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="cloud-offline" size={48} color="#9CA3AF" />
-              <Text style={styles.emptyStateTitle}>No files yet</Text>
+              <Text style={styles.emptyStateTitle}>No files uploaded</Text>
               <Text style={styles.emptyStateSubtitle}>
-                Upload your first file to get started
+              Upload files to Cloudflare R2 to get started
               </Text>
             </View>
           }

@@ -7,7 +7,7 @@
     "icon": "./assets/images/tarlogo.png",
     "scheme": "tarapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +19,7 @@
       "package": "com.tarapp",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
-      },
+    },
     "plugins": [
       "expo-router",
       [
@@ -36,8 +36,15 @@
       ]
     ],
     "experiments": {
-    "typedRoutes": true
+      "typedRoutes": true
     },
-    "developmentClient": false
+    "developmentClient": false,
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "09ac1ed0-d8d4-489a-9a79-3edf1ec643ee"
+      }
+    },
+    "owner": "tarfw"
   }
 }

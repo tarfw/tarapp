@@ -1,6 +1,49 @@
 // Docs: https://www.instantdb.com/docs/modeling-data
 
-import { i } from "@instantdb/react";
+// Polyfill for Event object required by @instantdb/react-native
+// Must be loaded before any InstantDB imports
+if (typeof global.Event === 'undefined') {
+  global.Event = class Event {
+    constructor(type: string, eventInitDict?: any) {
+      this.type = type;
+      if (eventInitDict) {
+        Object.assign(this, eventInitDict);
+      }
+    }
+    type: string;
+    bubbles = false;
+    cancelable = false;
+    composed = false;
+    defaultPrevented = false;
+    eventPhase = 0;
+    isTrusted = false;
+    returnValue = true;
+    currentTarget: any = null;
+    target: any = null;
+    timeStamp = Date.now();
+
+    preventDefault() {
+      this.defaultPrevented = true;
+    }
+
+    stopPropagation() {}
+
+    stopImmediatePropagation() {}
+  };
+
+  // Also polyfill other Event-related globals that might be needed
+  if (typeof global.CustomEvent === 'undefined') {
+    global.CustomEvent = class CustomEvent extends global.Event {
+      constructor(type: string, eventInitDict?: any) {
+        super(type, eventInitDict);
+        this.detail = eventInitDict?.detail || null;
+      }
+      detail: any;
+    };
+  }
+}
+
+import { i } from "@instantdb/react-native";
 
 const _schema = i.schema({
   entities: {

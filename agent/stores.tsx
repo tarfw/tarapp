@@ -69,12 +69,20 @@ export default function StoresAgent() {
     }
 
     const storeId = id();
-    const newStore = {
+    const newStore: any = {
       name: name.trim(),
-      domain: domain.trim(),
-      currency: currency.trim(),
-      timezone: timezone.trim(),
     };
+
+    // Only add optional fields if they have values
+    if (domain.trim()) {
+      newStore.domain = domain.trim();
+    }
+    if (currency.trim()) {
+      newStore.currency = currency.trim();
+    }
+    if (timezone.trim()) {
+      newStore.timezone = timezone.trim();
+    }
 
     const transactions = [
       db.tx.stores[storeId].create(newStore),
@@ -102,13 +110,27 @@ export default function StoresAgent() {
       return;
     }
 
-    const updatedStore = {
+    const updatedStore: any = {
       id: currentStore.id,
       name: name.trim(),
-      domain: domain.trim(),
-      currency: currency.trim(),
-      timezone: timezone.trim(),
     };
+
+    // Only add optional fields if they have values, otherwise set to null to clear them
+    if (domain.trim()) {
+      updatedStore.domain = domain.trim();
+    } else {
+      updatedStore.domain = null;
+    }
+    if (currency.trim()) {
+      updatedStore.currency = currency.trim();
+    } else {
+      updatedStore.currency = null;
+    }
+    if (timezone.trim()) {
+      updatedStore.timezone = timezone.trim();
+    } else {
+      updatedStore.timezone = null;
+    }
 
     db.transact([
       db.tx.stores[currentStore.id].update(updatedStore)
